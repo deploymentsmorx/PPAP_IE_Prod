@@ -124,7 +124,7 @@ export async function buildPack(ppapId: string, origin: string, cookie: string |
 
   const pack = await PDFDocument.create();
   pack.setTitle("PPAP submission pack");
-  pack.setCreator("PPAP Management — Ingenious Engineering");
+  pack.setCreator("PPAP Management — Smorx");
   const outline: OutlineItem[] = [];
   const elementPdfs: BuiltPack["elementPdfs"] = [];
   const attachments: BuiltPack["attachments"] = [];

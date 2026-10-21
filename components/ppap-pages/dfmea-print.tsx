@@ -28,7 +28,7 @@ export async function DfmeaPrint({ ppapId }: { ppapId: string }) {
   return (
     <div className="mx-auto max-w-[1400px] bg-white p-6 text-black print:p-0">
       <PrintHeader
-        supplierName="Ingenious Engineering"
+        supplierName="Smorx"
         title="DESIGN FAILURE MODE AND EFFECTS ANALYSIS (DFMEA)"
         subtitle={`${ppap.customer.name} — ${ppap.partRevision.part.partName} (${ppap.partRevision.part.partNumber})`}
         docNo={element.docNo}

@@ -20,7 +20,7 @@ export async function exportCsrWorkbook(ppapElementId: string): Promise<ExcelJS.
   sheet.columns = [10, 70, 12, 28, 28].map((width) => ({ width }));
   const { heading, tableRow, docLine, gap } = createSheetWriter(sheet, 5);
 
-  heading("Ingenious Engineering", 14);
+  heading("Smorx", 14);
   heading(`CSR - CUSTOMER SPECIFIC REQUIREMENTS — ${customer.name}`, 12);
   docLine(element.docNo, element.revision);
   gap();

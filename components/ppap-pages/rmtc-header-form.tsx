@@ -72,7 +72,7 @@ export function RmtcHeaderForm({
         </div>
         <div className="space-y-1">
           <Label htmlFor="supplierName">Supplier Name</Label>
-          <Input id="supplierName" name="supplierName" defaultValue={detail?.supplierName ?? ""} disabled={locked} />
+          <Input id="supplierName" name="supplierName" defaultValue={detail?.supplierName ?? "Smorx"} disabled={locked} />
         </div>
         <div className="space-y-1">
           <Label htmlFor="codeNo">Code No</Label>

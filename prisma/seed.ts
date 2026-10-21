@@ -160,9 +160,9 @@ async function main() {
 
   await prisma.supplier.upsert({
     where: { supplierCode: "IEPL" },
-    update: {},
+    update: { name: "Smorx" },
     create: {
-      name: "Ingenious Engineering Pvt Ltd",
+      name: "Smorx",
       supplierCode: "IEPL",
       addressLine1: "Plot No. 49-P2, Jakkasandra Industrial Area",
       city: "Kolar District",
@@ -425,8 +425,8 @@ async function main() {
       customerPartRevision: "H",
       partNo: "1170750-NBL CHASSIS",
       partRevision: "H",
-      supplier: "Ingenious Engineering Pvt. Ltd.",
-      plant: "Ingenious Engineering Pvt. Ltd.",
+      supplier: "Smorx",
+      plant: "Smorx",
       material: "As per drw/equ grade",
       keyContactPhone: "Santhosh Kumar BG 9449116311",
       coreTeamText: "Rajesh Goel, Santhosh BG, Jeevan Kumar, Subramani, Narayanswamy, Alexander, Nawaz Pasha,",
@@ -534,7 +534,7 @@ async function main() {
   const rmtcResult = await importRmtcWorkbook(rmtcWorkbook, rmtcElement.id);
   await prisma.rmtcReportDetail.update({
     where: { ppapElementId: rmtcElement.id },
-    data: { projectName: "NBL", supplierName: "INGENIOUS ENGINEERING" },
+    data: { projectName: "NBL", supplierName: "Smorx" },
   });
   console.log(`Seeded element 10 (RM Test Reports): ${rmtcResult.imported} rows.`);
 

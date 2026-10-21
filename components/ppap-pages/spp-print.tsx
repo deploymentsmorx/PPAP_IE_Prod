@@ -49,7 +49,7 @@ export async function SppPrint({ ppapId }: { ppapId: string }) {
     },
   });
   const header = (
-    <PrintHeader supplierName="Ingenious Engineering" title="PPAP DOCUMENTS" subtitle="SAMPLE PRODUCTION PART" docNo={element.docNo} revision={element.revision} />
+    <PrintHeader supplierName="Smorx" title="PPAP DOCUMENTS" subtitle="SAMPLE PRODUCTION PART" docNo={element.docNo} revision={element.revision} />
   );
 
   if (element.applicability === "NA") {

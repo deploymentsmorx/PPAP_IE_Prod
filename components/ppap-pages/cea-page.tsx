@@ -63,7 +63,7 @@ export async function CeaPage({ ppapId }: { ppapId: string }) {
               locked={locked}
               master={{
                 customerName: ppap.customer.name,
-                supplierName: "Ingenious Engineering Pvt Ltd",
+                supplierName: "Smorx",
                 partName: ppap.partRevision.part.partName,
                 partNumber: ppap.partRevision.part.partNumber,
                 drawingNo: ppap.partRevision.drawingNo ?? "",

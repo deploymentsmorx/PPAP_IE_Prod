@@ -31,7 +31,7 @@ export async function MasterSamplePrint({ ppapId }: { ppapId: string }) {
   return (
     <div className="mx-auto max-w-4xl bg-white p-6 text-black print:p-0">
       <style>{`@page { size: A4 portrait; margin: 10mm; }`}</style>
-      <PrintHeader supplierName="Ingenious Engineering" title="PPAP DOCUMENTS" subtitle="MASTER SAMPLE" docNo={element.docNo} revision={element.revision} />
+      <PrintHeader supplierName="Smorx" title="PPAP DOCUMENTS" subtitle="MASTER SAMPLE" docNo={element.docNo} revision={element.revision} />
 
       {element.applicability === "NA" ? (
         <p className="mt-4 text-sm">N/A — {element.naReason}</p>

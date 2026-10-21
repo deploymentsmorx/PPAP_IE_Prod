@@ -34,7 +34,7 @@ export async function exportSppWorkbook(ppapElementId: string): Promise<ExcelJS.
   sheet.columns = [{ width: 26 }, { width: 22 }, { width: 22 }, { width: 22 }, { width: 14 }, { width: 24 }];
   const { heading, tableRow, docLine, gap } = createSheetWriter(sheet, 6);
 
-  heading("Ingenious Engineering", 14);
+  heading("Smorx", 14);
   heading("PPAP DOCUMENTS — SAMPLE PRODUCTION PART", 12);
   docLine(element.docNo, element.revision);
   heading("PRODUCTION PART SAMPLE FORMAT", 12);

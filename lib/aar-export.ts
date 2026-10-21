@@ -51,7 +51,7 @@ export async function exportAarWorkbook(ppapElementId: string): Promise<ExcelJS.
   sheet.columns = [{ width: 8 }, { width: 26 }, { width: 26 }, { width: 22 }, { width: 22 }, { width: 30 }];
   const { heading, tableRow, docLine, gap } = createSheetWriter(sheet, 6);
 
-  heading("Ingenious Engineering", 14);
+  heading("Smorx", 14);
   heading("PPAP DOCUMENTS — AAR", 12);
   docLine(element.docNo, element.revision);
   heading("APPEARANCE APPROVAL REPORT (AAR)", 12);

@@ -25,7 +25,7 @@ export async function exportCheckingAidsWorkbook(ppapElementId: string): Promise
   sheet.columns = [6, 28, 14, 16, 12, 12, 12, 13, 13, 18, 18].map((width) => ({ width }));
   const { heading, tableRow, docLine, gap } = createSheetWriter(sheet, 11);
 
-  heading("INGENIOUS ENGINEERING", 14);
+  heading("Smorx", 14);
   heading("MASTER LIST OF MEASURING INSTRUMENTS", 12);
   docLine(element.docNo, element.revision);
   gap();

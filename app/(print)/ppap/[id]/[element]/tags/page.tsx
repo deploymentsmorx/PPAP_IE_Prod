@@ -40,7 +40,7 @@ export default async function SampleTagsPage({ params }: { params: Promise<{ id:
       if (s.lotBatchNo) lines.push(["Lot/Batch", s.lotBatchNo]);
       return {
         id: s.id,
-        heading: "PPAP Sample — Ingenious Engineering",
+        heading: "PPAP Sample — Smorx",
         sampleId: s.sampleId,
         lines,
         payload: sampleTagPayload({ sampleId: s.sampleId, partNumber: part.partNumber, revision, date }),
@@ -57,7 +57,7 @@ export default async function SampleTagsPage({ params }: { params: Promise<{ id:
       const expiry = expiryDate ? formatDateIndia(expiryDate) : null;
       return {
         id: r.id,
-        heading: "MASTER SAMPLE — Ingenious Engineering",
+        heading: "MASTER SAMPLE — Smorx",
         sampleId: r.sampleId,
         lines: [
           ["Part", part.partName],

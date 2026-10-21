@@ -48,7 +48,7 @@ export async function AarPrint({ ppapId }: { ppapId: string }) {
   return (
     <div className="mx-auto max-w-4xl bg-white p-6 text-black print:p-0">
       <style>{`@page { size: A4 portrait; margin: 10mm; }`}</style>
-      <PrintHeader supplierName="Ingenious Engineering" title="PPAP DOCUMENTS" subtitle="AAR" docNo={element.docNo} revision={element.revision} />
+      <PrintHeader supplierName="Smorx" title="PPAP DOCUMENTS" subtitle="AAR" docNo={element.docNo} revision={element.revision} />
 
       <div className="mt-2 border border-black p-1 text-center text-sm font-semibold">APPEARANCE APPROVAL REPORT (AAR)</div>
 

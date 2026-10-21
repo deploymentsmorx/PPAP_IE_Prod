@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { displayCompanyName } from "@/lib/brand";
 import { AAR_DEFAULT_ROWS, formatLabPaintResult, type AarPaintProperty } from "@/lib/calc/aar";
 import { getAarCriteriaForPpap } from "@/lib/csr";
 
@@ -59,8 +60,8 @@ export async function ensureAarCriteriaRows(ppapElementId: string, ppapId: strin
   });
 }
 
-/** The single supplier record (Ingenious Engineering) — there's no per-PPAP supplier FK. */
+/** The single supplier record (Smorx) — there's no per-PPAP supplier FK. */
 export async function getSupplierForHeader() {
   const supplier = await prisma.supplier.findFirst({ orderBy: { createdAt: "asc" } });
-  return { name: supplier?.name ?? "Ingenious Engineering Pvt Ltd", code: supplier?.supplierCode ?? null };
+  return { name: displayCompanyName(supplier?.name), code: supplier?.supplierCode ?? null };
 }

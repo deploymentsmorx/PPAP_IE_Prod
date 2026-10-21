@@ -65,7 +65,7 @@ export async function MsaPrint({ ppapId }: { ppapId: string }) {
         return (
           <div key={study.id} className="msa-print-page p-4">
             <PrintHeader
-              supplierName="Ingenious Engineering Pvt Ltd"
+              supplierName="Smorx"
               title="MEASUREMENT SYSTEM ANALYSIS (MSA)"
               subtitle={`${element.ppap.customer.name} — ${part.partName} (${part.partNumber})`}
               docNo={element.docNo}

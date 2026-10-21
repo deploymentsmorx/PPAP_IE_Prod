@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 test("unauthenticated user is redirected to /login", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveURL(/\/login$/);
-  await expect(page.getByText("PPAP Management — Ingenious Engineering Pvt Ltd")).toBeVisible();
+  await expect(page.getByText("PPAP Management — Smorx")).toBeVisible();
 });
 
 test("signs in with seeded credentials and sees the PPAP list", async ({ page }) => {

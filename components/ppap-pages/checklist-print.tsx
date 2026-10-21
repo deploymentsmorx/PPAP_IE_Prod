@@ -23,7 +23,7 @@ export async function ChecklistPrint({ ppapId }: { ppapId: string }) {
   return (
     <div className="mx-auto max-w-5xl bg-white p-6 text-black print:p-0">
       <PrintHeader
-        supplierName="Ingenious Engineering"
+        supplierName="Smorx"
         title="PPAP DOCUMENTS"
         subtitle="PPAP CHECK LIST"
         docNo={element0.docNo}

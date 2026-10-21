@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { displayCompanyName } from "@/lib/brand";
 import { pswReadiness, submissionResults, reasonFromText } from "@/lib/calc/psw";
 
 /**
@@ -51,7 +52,7 @@ export async function getPswView(ppapId: string) {
       additionalChanges: ecns,
     },
     supplierInfo: {
-      name: supplier?.name ?? "Ingenious Engineering Pvt Ltd",
+      name: displayCompanyName(supplier?.name),
       code: supplier?.supplierCode ?? null,
       street: [supplier?.addressLine1, supplier?.addressLine2].filter(Boolean).join(", ") || null,
       city: supplier?.city ?? null,

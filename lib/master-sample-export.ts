@@ -35,7 +35,7 @@ export async function exportMasterSampleWorkbook(ppapElementId: string): Promise
   sheet.columns = [28, 14, 12, 14, 6, 10, 14, 12, 16, 14, 14, 12, 22].map((width) => ({ width }));
   const { heading, tableRow, docLine, gap } = createSheetWriter(sheet, 13);
 
-  heading("Ingenious Engineering", 14);
+  heading("Smorx", 14);
   heading("PPAP DOCUMENTS — MASTER SAMPLE", 12);
   docLine(element.docNo, element.revision);
   gap();

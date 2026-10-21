@@ -52,7 +52,7 @@ export async function CeaPrint({ ppapId }: { ppapId: string }) {
   return (
     <div className="mx-auto max-w-4xl bg-white p-6 text-black print:p-0">
       <PrintHeader
-        supplierName="Ingenious Engineering"
+        supplierName="Smorx"
         title="PPAP DOCUMENTS"
         subtitle="CUSTOMER ENGINEERING APPROVAL (CEA)"
         docNo={element.docNo}
@@ -67,7 +67,7 @@ export async function CeaPrint({ ppapId }: { ppapId: string }) {
             <Row label="CEA No." value={d?.ceaNo} />
             <Row label="Date" value={d?.ceaDate ? formatDateIndia(d.ceaDate) : null} />
             <Row label="Customer" value={ppap.customer.name} />
-            <Row label="Supplier" value="Ingenious Engineering Pvt Ltd" />
+            <Row label="Supplier" value="Smorx" />
             <Row label="Part" value={ppap.partRevision.part.partName} />
             <Row label="Part No." value={ppap.partRevision.part.partNumber} />
             <Row label="Drawing No./Rev" value={`${ppap.partRevision.drawingNo ?? "-"} / ${ppap.partRevision.revision}`} />

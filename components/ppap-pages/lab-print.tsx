@@ -36,7 +36,7 @@ type Signer = { name: string | null; signatureUrl: string | null } | null;
 /**
  * Mirrors the reference sheet "12. LAB Reports" (portrait): header block,
  * a two-column report info block, Test Details, Mechanical Properties,
- * Chemical Analysis, Paint Details, and the Ingenious QA Verification
+ * Chemical Analysis, Paint Details, and the Smorx QA Verification
  * block (Verified = the Checked stage). One page per report.
  */
 export async function LabPrint({ ppapId }: { ppapId: string }) {
@@ -64,7 +64,7 @@ export async function LabPrint({ ppapId }: { ppapId: string }) {
 
   const header = (
     <PrintHeader
-      supplierName="Ingenious Engineering"
+      supplierName="Smorx"
       title="PPAP DOCUMENTS"
       subtitle="LAB REPORTS"
       docNo={element.docNo}
@@ -94,7 +94,7 @@ export async function LabPrint({ ppapId }: { ppapId: string }) {
       <tbody>
         <tr>
           <td className={sectionCell} colSpan={4}>
-            Ingenious QA Verification
+            Smorx QA Verification
           </td>
         </tr>
         <tr>

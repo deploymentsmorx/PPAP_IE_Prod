@@ -74,7 +74,7 @@ export async function exportFullWorkbook(ppapId: string): Promise<ExcelJS.Workbo
   const el = (n: number) => ppap.elements.find((e) => e.elementNo === n)!;
   const part = ppap.partRevision.part;
   const wb = new ExcelJS.Workbook();
-  wb.creator = "PPAP Management — Ingenious Engineering";
+  wb.creator = "PPAP Management — Smorx";
 
   const reuse: Record<string, (elementId: string) => Promise<ExcelJS.Workbook>> = {
     "5. PFC": exportPfcWorkbook,
@@ -103,7 +103,7 @@ export async function exportFullWorkbook(ppapId: string): Promise<ExcelJS.Workbo
     }
     const ws = wb.addWorksheet(sheet.name, { pageSetup: { paperSize: 9, orientation: "landscape", fitToPage: true, fitToWidth: 1, fitToHeight: 0 } });
     const w = createSheetWriter(ws, 12);
-    w.heading("Ingenious Engineering", 14);
+    w.heading("Smorx", 14);
     w.heading(`PPAP DOCUMENTS — ${sheet.name.replace(/^\d+\.\s*/, "").toUpperCase()}`, 12);
     w.docLine(element.docNo, element.revision);
     w.heading(`${ppap.customer.name} — ${part.partName} (${part.partNumber} Rev.${ppap.partRevision.revision})`);

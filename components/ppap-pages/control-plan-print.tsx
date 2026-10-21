@@ -64,7 +64,7 @@ export async function ControlPlanPrint({ ppapId }: { ppapId: string }) {
       {pages.map((pageRows, pageIndex) => (
         <div key={pageIndex} className="cp-print-page p-4">
           <PrintHeader
-            supplierName="Ingenious Engineering Pvt Ltd"
+            supplierName="Smorx"
             title="CONTROL PLAN"
             subtitle={`${element.ppap.customer.name} — ${part.partName} (${part.partNumber})`}
             docNo={detail?.controlPlanNo}

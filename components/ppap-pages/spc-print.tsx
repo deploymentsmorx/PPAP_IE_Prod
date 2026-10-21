@@ -54,7 +54,7 @@ export async function SpcPrint({ ppapId }: { ppapId: string }) {
       {studies.length === 0 ? (
         <div className="p-4">
           <PrintHeader
-            supplierName="Ingenious Engineering Pvt Ltd"
+            supplierName="Smorx"
             title="STATISTICAL PROCESS CONTROL STUDY"
             subtitle={`${element.ppap.customer.name} — ${part.partName} (${part.partNumber})`}
             docNo={element.docNo}
@@ -69,7 +69,7 @@ export async function SpcPrint({ ppapId }: { ppapId: string }) {
         return (
           <div key={study.id} className="spc-print-page p-4">
             <PrintHeader
-              supplierName="Ingenious Engineering Pvt Ltd"
+              supplierName="Smorx"
               title="STATISTICAL PROCESS CONTROL STUDY"
               subtitle={`${element.ppap.customer.name} — ${part.partName} (${part.partNumber})`}
               docNo={element.docNo}

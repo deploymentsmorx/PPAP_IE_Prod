@@ -58,7 +58,7 @@ export async function DimensionalReportPrint({ ppapId }: { ppapId: string }) {
               <tbody>
                 <tr>
                   <td className="border border-black p-1" colSpan={5}>
-                    Ingenious Engineering Pvt Ltd
+                    Smorx
                   </td>
                   <td className="border border-black p-1" colSpan={sampleColumns.length}>
                     Inspection Report

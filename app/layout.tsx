@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: { default: "PPAP Management — Ingenious Engineering", template: "%s · PPAP Management" },
-  description: "PPAP submission management for Ingenious Engineering Pvt Ltd",
+  title: { default: "PPAP Management — Smorx", template: "%s · PPAP Management" },
+  description: "PPAP submission management for Smorx",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

@@ -45,7 +45,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             <span className="grid size-9 place-items-center rounded-xl bg-white/10 text-[0.8rem] font-bold tracking-tight text-white shadow-sm ring-1 ring-white/20">IE</span>
             <span className="hidden leading-tight sm:block">
               <span className="block text-sm font-semibold tracking-tight text-white">PPAP Management</span>
-              <span className="block text-[0.68rem] text-white/60">Ingenious Engineering Pvt Ltd</span>
+              <span className="block text-[0.68rem] text-white/60">Smorx</span>
             </span>
           </Link>
           <div className="mx-0.5 hidden h-7 w-px bg-white/15 sm:block" />

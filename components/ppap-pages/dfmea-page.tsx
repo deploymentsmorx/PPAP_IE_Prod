@@ -64,7 +64,7 @@ export async function DfmeaPage({ ppapId }: { ppapId: string }) {
                 locked={locked}
                 master={{
                   customerName: ppap.customer.name,
-                  supplierName: "Ingenious Engineering Pvt Ltd",
+                  supplierName: "Smorx",
                   partName: ppap.partRevision.part.partName,
                   partNumber: ppap.partRevision.part.partNumber,
                   project: ppap.partRevision.part.projectModel ?? "",

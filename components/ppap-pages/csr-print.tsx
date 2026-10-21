@@ -22,7 +22,7 @@ export async function CsrPrint({ ppapId }: { ppapId: string }) {
     prisma.ppapElement.findUniqueOrThrow({ where: { id: element.id }, include: { preparedBy: true, checkedBy: true, approvedBy: true } }),
     prisma.csrZoneMapPage.findMany({ where: { ppapElementId: element.id }, orderBy: { sortOrder: "asc" }, include: { views: { orderBy: { sortOrder: "asc" } } } }),
   ]);
-  const header = <PrintHeader supplierName="Ingenious Engineering" title="PPAP DOCUMENTS" subtitle="CSR - CUSTOMER SPECIFIC REQUIREMENTS" docNo={element.docNo} revision={element.revision} />;
+  const header = <PrintHeader supplierName="Smorx" title="PPAP DOCUMENTS" subtitle="CSR - CUSTOMER SPECIFIC REQUIREMENTS" docNo={element.docNo} revision={element.revision} />;
   const zones = sections.filter((s) => s.isZone);
   const others = sections.filter((s) => !s.isZone);
   const summary = complianceSummary(sections.flatMap((s) => s.requirements.map((r) => r.compliance)));

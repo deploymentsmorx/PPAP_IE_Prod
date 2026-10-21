@@ -39,7 +39,7 @@ export async function DesignRecordPrint({ ppapId }: { ppapId: string }) {
   return (
     <div className="mx-auto max-w-4xl bg-white p-6 text-black print:p-0">
       <PrintHeader
-        supplierName="Ingenious Engineering"
+        supplierName="Smorx"
         title="PPAP DOCUMENTS"
         subtitle="DESIGN RECORD"
         docNo={element.docNo}

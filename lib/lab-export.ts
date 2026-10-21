@@ -93,7 +93,7 @@ export async function exportLabWorkbook(ppapElementId: string): Promise<ExcelJS.
 
   // ---- Title block (mirrors <PrintHeader>) ----
   sheet.mergeCells(r, 1, r, COLUMNS);
-  sheet.getCell(r, 1).value = "Ingenious Engineering";
+  sheet.getCell(r, 1).value = "Smorx";
   sheet.getCell(r, 1).font = { bold: true, size: 14 };
   r++;
   sheet.mergeCells(r, 1, r, COLUMNS);
@@ -182,8 +182,8 @@ export async function exportLabWorkbook(ppapElementId: string): Promise<ExcelJS.
     r += 2;
   }
 
-  // ---- Ingenious QA verification block (mirrors <PrintFooter>) ----
-  heading("Ingenious QA Verification");
+  // ---- Smorx QA verification block (mirrors <PrintFooter>) ----
+  heading("Smorx QA Verification");
   tableRow(["Stage", "Name", "Date", "", "", ""], { head: true });
   tableRow(["Verified By", element.checkedBy?.name ?? null, element.checkedAt ? formatDateIndia(element.checkedAt) : null, "", "", ""]);
   tableRow(["Prepared By", element.preparedBy?.name ?? null, element.preparedAt ? formatDateIndia(element.preparedAt) : null, "", "", ""]);

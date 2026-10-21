@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { displayCompanyName } from "@/lib/brand";
 import { formatDateIndia } from "@/lib/format";
 import { computePlateFlags } from "@/lib/calc/plate";
 
@@ -40,7 +41,7 @@ export async function RmtcPrint({ ppapId }: { ppapId: string }) {
         <tbody>
           <tr>
             <td className="border border-black p-1" colSpan={5}>
-              Ingenious Engineering Pvt Ltd
+              Smorx
             </td>
             <td className="border border-black p-1" colSpan={6}>
               Material Performance Test Results (RM Test Reports)
@@ -70,7 +71,7 @@ export async function RmtcPrint({ ppapId }: { ppapId: string }) {
           <tr>
             <td className="border border-black p-1 font-medium">Supplier Name:</td>
             <td className="border border-black p-1" colSpan={2}>
-              {detail?.supplierName || "-"}
+              {displayCompanyName(detail?.supplierName)}
             </td>
             <td className="border border-black p-1 font-medium">Part Name:</td>
             <td className="border border-black p-1" colSpan={2}>

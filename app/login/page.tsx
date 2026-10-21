@@ -34,7 +34,7 @@ export default async function LoginPage() {
         <div aria-hidden className="absolute -bottom-56 -left-40 size-[30rem] rounded-full bg-[radial-gradient(circle,oklch(0.66_0.1_188/0.18),transparent_68%)]" />
         <div className="relative flex items-center gap-3">
           <span className="grid size-10 place-items-center rounded-xl bg-white/10 text-sm font-bold ring-1 ring-white/20">IE</span>
-          <span className="text-sm font-medium opacity-90">Ingenious Engineering Pvt Ltd</span>
+          <span className="text-sm font-medium opacity-90">Smorx</span>
         </div>
         <div className="relative max-w-md space-y-6">
           <h1 className="text-3xl leading-tight font-semibold tracking-tight">Production Part Approval, end to end.</h1>

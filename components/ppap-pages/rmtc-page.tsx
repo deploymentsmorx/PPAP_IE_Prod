@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { displayCompanyName } from "@/lib/brand";
 import { getMaterialSpecsForPicker } from "@/lib/actions/rmtc";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -45,7 +46,7 @@ export async function RmtcPage({ ppapId }: { ppapId: string }) {
         projectName: detail.projectName,
         otherRef: detail.otherRef,
         codeNo: detail.codeNo,
-        supplierName: detail.supplierName,
+        supplierName: displayCompanyName(detail.supplierName),
         thicknessToleranceMm: tolerance.thicknessMm,
         widthToleranceMm: tolerance.widthMm,
         lengthToleranceMm: tolerance.lengthMm,
