@@ -29,10 +29,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return { id: user.id, name: user.name, email: user.email, image: user.image };
       },
     }),
-    Nodemailer({
-      server: process.env.EMAIL_SERVER,
-      from: process.env.EMAIL_FROM,
-    }),
+    // Magic-link login only when an SMTP server is configured — the
+    // provider throws at startup (and fails `next build`) without one.
+    ...(process.env.EMAIL_SERVER
+      ? [
+          Nodemailer({
+            server: process.env.EMAIL_SERVER,
+            from: process.env.EMAIL_FROM,
+          }),
+        ]
+      : []),
   ],
   callbacks: {
     async jwt({ token, user }) {

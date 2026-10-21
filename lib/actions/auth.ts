@@ -47,6 +47,9 @@ export async function sendMagicLink(
   if (!parsed.success) {
     return { error: "Enter a valid email." };
   }
+  if (!process.env.EMAIL_SERVER) {
+    return { error: "Email sign-in isn't set up on this server. Use your password instead." };
+  }
 
   try {
     await signIn("nodemailer", { email: parsed.data.email, redirectTo: "/" });
