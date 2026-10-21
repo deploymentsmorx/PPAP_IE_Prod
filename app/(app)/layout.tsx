@@ -39,25 +39,25 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex min-h-svh flex-col">
-      <header className="sticky top-0 z-40 border-b border-border/80 bg-card/95 shadow-[0_1px_3px_0_rgb(15_23_42/0.04)] backdrop-blur supports-[backdrop-filter]:bg-card/85">
+      <header className="relative sticky top-0 z-40 border-b border-white/10 bg-brand text-brand-foreground shadow-[0_4px_18px_0_rgb(15_23_42/0.12)] after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-highlight/65 after:to-transparent">
         <nav aria-label="Main" className="flex h-16 items-center gap-4 px-4 lg:gap-5 lg:px-8">
           <Link href="/" className="flex shrink-0 items-center gap-3 rounded-md pr-2 hover:opacity-90">
-            <span className="grid size-9 place-items-center rounded-xl bg-brand text-[0.8rem] font-bold tracking-tight text-brand-foreground shadow-sm ring-1 ring-white/10">IE</span>
+            <span className="grid size-9 place-items-center rounded-xl bg-white/10 text-[0.8rem] font-bold tracking-tight text-white shadow-sm ring-1 ring-white/20">IE</span>
             <span className="hidden leading-tight sm:block">
-              <span className="block text-sm font-semibold tracking-tight text-foreground">PPAP Management</span>
-              <span className="block text-[0.68rem] text-muted-foreground">Ingenious Engineering Pvt Ltd</span>
+              <span className="block text-sm font-semibold tracking-tight text-white">PPAP Management</span>
+              <span className="block text-[0.68rem] text-white/60">Ingenious Engineering Pvt Ltd</span>
             </span>
           </Link>
-          <div className="mx-0.5 hidden h-7 w-px bg-border sm:block" />
+          <div className="mx-0.5 hidden h-7 w-px bg-white/15 sm:block" />
           <AppNav items={items} />
           <div className="ml-auto flex items-center gap-3 lg:gap-4">
             <div className="hidden items-center gap-2.5 lg:flex">
-              <span className="grid size-9 place-items-center rounded-full bg-accent text-xs font-semibold text-accent-foreground ring-1 ring-border/80">
+              <span className="grid size-9 place-items-center rounded-full bg-white/10 text-xs font-semibold text-white ring-1 ring-white/20">
                 {initials(displayName)}
               </span>
               <span className="leading-tight">
                 <span className="block text-sm font-medium">{displayName}</span>
-                <span className="block text-[0.7rem] text-muted-foreground">
+                <span className="block text-[0.7rem] text-white/60">
                   {can?.ownCustomerOnly ? "Customer approver (customer)" : user?.roles.map(roleLabel).join(", ")}
                 </span>
               </span>
@@ -68,7 +68,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                 await signOut({ redirectTo: "/login" });
               }}
             >
-              <Button type="submit" variant="outline" size="sm" className="gap-1.5">
+              <Button type="submit" variant="outline" size="sm" className="gap-1.5 border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white">
                 <LogOut className="size-3.5" aria-hidden />
                 Sign out
               </Button>

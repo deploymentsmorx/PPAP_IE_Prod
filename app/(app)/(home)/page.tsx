@@ -42,15 +42,23 @@ const TONE = {
   red: "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300",
 };
 
+const KPI_EDGE = {
+  neutral: "border-t-slate-400",
+  blue: "border-t-primary",
+  amber: "border-t-amber-400",
+  green: "border-t-emerald-500",
+  red: "border-t-red-500",
+};
+
 function Kpi({ label, value, icon: Icon, tone, alert, testId }: { label: string; value: number; icon: LucideIcon; tone: keyof typeof TONE; alert?: "warn" | "bad"; testId: string }) {
   const valueClass = alert === "bad" && value > 0 ? "text-red-600 dark:text-red-400" : alert === "warn" && value > 0 ? "text-amber-600 dark:text-amber-400" : "";
   return (
-    <div className="flex items-start justify-between gap-2 rounded-xl border border-border/80 bg-card p-4 shadow-[0_1px_2px_0_rgb(15_23_42/0.04)]" data-testid={testId}>
+    <div className={cn("flex items-start justify-between gap-2 rounded-xl border border-border/80 border-t-2 bg-card p-4 shadow-[0_3px_12px_0_rgb(15_23_42/0.035)]", KPI_EDGE[tone])} data-testid={testId}>
       <div className="min-w-0">
         <div className="text-xs leading-snug font-medium text-muted-foreground">{label}</div>
         <div className={cn("mt-1 text-2xl font-semibold tracking-tight tabular-nums", valueClass)}>{value}</div>
       </div>
-      <span className={cn("grid size-8 shrink-0 place-items-center rounded-lg", TONE[tone])}>
+      <span className={cn("grid size-10 shrink-0 place-items-center rounded-xl ring-1 ring-black/[0.03]", TONE[tone])}>
         <Icon className="size-4" aria-hidden />
       </span>
     </div>
@@ -60,9 +68,9 @@ function Kpi({ label, value, icon: Icon, tone, alert, testId }: { label: string;
 function Section({ title, icon: Icon, count, action, children, className, testId }: { title: string; icon: LucideIcon; count?: number; action?: React.ReactNode; children: React.ReactNode; className?: string; testId?: string }) {
   return (
     <Card className={className} data-testid={testId}>
-      <CardHeader className="flex flex-row items-center justify-between gap-2 border-b pb-3">
+      <CardHeader className="flex flex-row items-center justify-between gap-2 border-b bg-muted/30 pb-3">
         <CardTitle className="flex items-center gap-2 text-sm">
-          <span className="grid size-7 place-items-center rounded-md bg-accent text-primary">
+          <span className="grid size-8 place-items-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/10">
             <Icon className="size-3.5" aria-hidden />
           </span>
           {title}
@@ -94,21 +102,47 @@ export default async function DashboardPage() {
 
   return (
     <main className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="space-y-1">
-          <p className="text-[0.68rem] font-semibold tracking-[0.14em] text-primary/80 uppercase">Workspace overview</p>
-          <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
-          <p className="text-sm text-muted-foreground">
-            Welcome back, {firstName}. {user.can.editSupplierData ? "Here's where every PPAP stands today." : "PPAPs submitted to you for approval."}
-          </p>
+      <section className="relative isolate overflow-hidden rounded-2xl bg-brand px-5 py-6 text-brand-foreground shadow-xl shadow-slate-900/10 sm:px-7 sm:py-7">
+        <div aria-hidden className="absolute inset-0 -z-10 opacity-[0.08]" style={{ backgroundImage: "linear-gradient(currentColor 1px, transparent 1px), linear-gradient(90deg, currentColor 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
+        <div aria-hidden className="absolute -right-12 -top-28 -z-10 size-80 rounded-full border border-white/10 bg-[radial-gradient(circle,oklch(0.58_0.13_250/0.42),transparent_68%)]" />
+        <div aria-hidden className="absolute right-10 top-1/2 -z-10 hidden size-40 -translate-y-1/2 rounded-full border border-white/10 lg:block" />
+        <div className="relative flex flex-wrap items-center justify-between gap-5">
+          <div className="max-w-2xl space-y-2">
+            <p className="inline-flex items-center gap-2 text-[0.68rem] font-semibold tracking-[0.16em] text-highlight uppercase">
+              <span className="size-1.5 rounded-full bg-highlight shadow-[0_0_12px_2px_rgb(94_234_212/0.45)]" aria-hidden />
+              PPAP workspace
+            </p>
+            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Good to see you, {firstName}.</h1>
+            <p className="max-w-xl text-sm leading-relaxed text-white/70">
+              {user.can.editSupplierData ? "Keep submissions moving and see where every PPAP stands." : "Review PPAP submissions waiting for your approval."}
+            </p>
+          </div>
+          <div className="relative flex flex-col items-end gap-3">
+            <div className="hidden items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2.5 xl:flex" aria-label="PPAP approval workflow">
+              <span className="flex flex-col items-center gap-1 text-[0.55rem] font-semibold tracking-[0.1em] text-white/80 uppercase">
+                <BadgeCheck className="size-4 text-highlight" aria-hidden />
+                Prepared
+              </span>
+              <ArrowRight className="size-3 text-white/35" aria-hidden />
+              <span className="flex flex-col items-center gap-1 text-[0.55rem] font-semibold tracking-[0.1em] text-white/80 uppercase">
+                <BadgeCheck className="size-4 text-highlight" aria-hidden />
+                Checked
+              </span>
+              <ArrowRight className="size-3 text-white/35" aria-hidden />
+              <span className="flex flex-col items-center gap-1 text-[0.55rem] font-semibold tracking-[0.1em] text-white/80 uppercase">
+                <BadgeCheck className="size-4 text-highlight" aria-hidden />
+                Approved
+              </span>
+            </div>
+            {user.can.editSupplierData ? (
+              <Link href="/ppap/new" className={cn(buttonVariants({ size: "lg" }), "h-10 gap-2 rounded-xl border border-white/80 bg-white px-4 font-semibold text-brand shadow-lg shadow-black/10 hover:bg-slate-100 hover:text-brand")}>
+                <Plus className="size-4" aria-hidden />
+                New PPAP
+              </Link>
+            ) : null}
+          </div>
         </div>
-        {user.can.editSupplierData ? (
-          <Link href="/ppap/new" className={cn(buttonVariants({ size: "lg" }), "gap-1.5 px-3")}>
-            <Plus className="size-4" aria-hidden />
-            New PPAP
-          </Link>
-        ) : null}
-      </div>
+      </section>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <Kpi label="Open PPAPs" value={statusTotals.OPEN ?? 0} icon={CircleDot} tone="blue" testId="kpi-open" />
