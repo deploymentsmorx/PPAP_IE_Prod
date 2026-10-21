@@ -1,0 +1,12 @@
+services:
+  # Postgres and MinIO are deferred for now — the project is using Neon
+  # (hosted Postgres) for the database, and object storage (MinIO or an
+  # alternative) will be decided when ready to deploy upload features.
+  # See CLAUDE.md for the current status.
+
+  maildev:
+    image: maildev/maildev:latest
+    restart: unless-stopped
+    ports:
+      - "1080:1080" # web UI
+      - "1025:1025" # SMTP for NextAuth email magic link

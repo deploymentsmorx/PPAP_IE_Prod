@@ -1,0 +1,2219 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum UserRole {
+  ADMIN
+  QA_ENGINEER
+  QA_MANAGER
+  ENGINEERING
+  PRODUCTION
+  CUSTOMER_APPROVER
+}
+
+enum ApprovalMode {
+  CUSTOMER_PORTAL
+  SUPPLIER_UPLOAD
+}
+
+enum PartRevisionStatus {
+  ACTIVE
+  SUPERSEDED
+}
+
+/// AIAG level-matrix outcome for one (level, element) pair.
+/// CUSTOMER_DECIDES corresponds to the AIAG "*" marker.
+enum ApplicabilityRule {
+  REQUIRED
+  RETAIN
+  NA
+  CUSTOMER_DECIDES
+}
+
+/// What actually applies to a given PpapElement once a rule has been
+/// resolved for a specific PPAP (CUSTOMER_DECIDES is resolved to REQUIRED,
+/// RETAIN, or NA with a naReason before it reaches this enum).
+enum Applicability {
+  REQUIRED
+  RETAIN
+  NA
+}
+
+enum ElementStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  PREPARED
+  CHECKED
+  APPROVED
+  SUBMITTED
+  CUSTOMER_APPROVED
+  CUSTOMER_REJECTED
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  APPROVE
+  REVISE
+  DELETE
+}
+
+enum CharClass {
+  CRITICAL
+  MAJOR
+}
+
+enum FileStatus {
+  ACTIVE
+  SUPERSEDED
+}
+
+enum LabMechanicalProperty {
+  YIELD_STRENGTH
+  UTS
+  ELONGATION
+  HARDNESS
+  IMPACT
+}
+
+enum LabChemicalElement {
+  C
+  MN
+  SI
+  S
+  P
+  CR
+  NI
+  MO
+  OTHER
+}
+
+enum LabPaintProperty {
+  DFT
+  ADHESION
+  GLOSS
+  VISUAL
+}
+
+// ---------------------------------------------------------------------------
+// Master data
+// ---------------------------------------------------------------------------
+
+model Customer {
+  id                 String       @id @default(cuid())
+  name               String
+  code               String?      @unique
+  division           String?
+  addressLine1       String?
+  addressLine2       String?
+  city               String?
+  state              String?
+  zip                String?
+  buyerCode          String?
+  buyerName          String?
+  contactEmail       String?
+  contactPhone       String?
+  defaultPpapLevel   Int          @default(3)
+  approvalMode       ApprovalMode @default(SUPPLIER_UPLOAD)
+  defaultCpk         Decimal?     @db.Decimal(6, 4)
+  defaultGrrPercent  Decimal?     @db.Decimal(6, 4)
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  parts Part[]
+  ppaps Ppap[]
+  users User[]
+  csrSections CsrSection[]
+
+  @@map("customers")
+}
+
+model Supplier {
+  id           String   @id @default(cuid())
+  name         String
+  supplierCode String?  @unique
+  addressLine1 String?
+  addressLine2 String?
+  city         String?
+  state        String?
+  zip          String?
+  logoUrl      String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("suppliers")
+}
+
+model Part {
+  id            String   @id @default(cuid())
+  partName      String
+  partNumber    String
+  customerId    String
+  customer      Customer @relation(fields: [customerId], references: [id])
+  projectModel  String?
+  weightKg      Decimal? @db.Decimal(10, 3)
+  materialSpecId String?
+  materialSpec  MaterialSpec? @relation(fields: [materialSpecId], references: [id])
+  application   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  revisions PartRevision[]
+  fixtures  Fixture[]
+
+  @@unique([customerId, partNumber])
+  @@map("parts")
+}
+
+model PartRevision {
+  id           String             @id @default(cuid())
+  partId       String
+  part         Part               @relation(fields: [partId], references: [id])
+  revision     String
+  drawingNo    String?
+  eclDate      DateTime?
+  status       PartRevisionStatus @default(ACTIVE)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  ppaps         Ppap[]
+  createdByEcns EcnRecord[]
+
+  @@unique([partId, revision])
+  @@map("part_revisions")
+}
+
+model MaterialSpec {
+  id         String   @id @default(cuid())
+  standard   String // e.g. "IS 2062"
+  grade      String // e.g. "E250 BR"
+  // chemical limits, percent, min/max per element
+  cMin       Decimal? @db.Decimal(6, 4)
+  cMax       Decimal? @db.Decimal(6, 4)
+  mnMin      Decimal? @db.Decimal(6, 4)
+  mnMax      Decimal? @db.Decimal(6, 4)
+  siMin      Decimal? @db.Decimal(6, 4)
+  siMax      Decimal? @db.Decimal(6, 4)
+  sMin       Decimal? @db.Decimal(6, 4)
+  sMax       Decimal? @db.Decimal(6, 4)
+  pMin       Decimal? @db.Decimal(6, 4)
+  pMax       Decimal? @db.Decimal(6, 4)
+  crMin      Decimal? @db.Decimal(6, 4)
+  crMax      Decimal? @db.Decimal(6, 4)
+  niMin      Decimal? @db.Decimal(6, 4)
+  niMax      Decimal? @db.Decimal(6, 4)
+  moMin      Decimal? @db.Decimal(6, 4)
+  moMax      Decimal? @db.Decimal(6, 4)
+  otherNote  String?
+  // mechanical limits
+  ysMinMpa   Decimal? @db.Decimal(8, 2)
+  utsMinMpa  Decimal? @db.Decimal(8, 2)
+  utsMaxMpa  Decimal? @db.Decimal(8, 2)
+  elongationMinPct Decimal? @db.Decimal(6, 2)
+  hardnessNote     String?
+  impactMinJ       Decimal? @db.Decimal(8, 2)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  parts Part[]
+  designRecordDetails DesignRecordDetail[]
+  rmtcReportRows      RmtcReportRow[]
+  labReports          LabReport[]
+
+  @@unique([standard, grade])
+  @@map("material_specs")
+}
+
+/// Generic admin-editable code lists (operations, units, char classes,
+/// control in-charge codes W/P/I/Q, reaction plan codes A-D, stock
+/// disposition, change types, etc).
+model LookupList {
+  id        String   @id @default(cuid())
+  listKey   String // e.g. "CONTROL_INCHARGE", "REACTION_PLAN"
+  code      String // e.g. "W", "A"
+  label     String // e.g. "Regular Operator Check"
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([listKey, code])
+  @@map("lookup_lists")
+}
+
+model User {
+  id             String     @id @default(cuid())
+  name           String
+  email          String     @unique
+  emailVerified  DateTime?
+  image          String?
+  passwordHash   String?
+  designation    String?
+  phone          String?
+  roles          UserRole[] @default([])
+  signatureUrl   String?
+  customerId     String?
+  customer       Customer?  @relation(fields: [customerId], references: [id])
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  accounts Account[]
+  sessions Session[]
+
+  preparedElements PpapElement[] @relation("PreparedBy")
+  checkedElements  PpapElement[] @relation("CheckedBy")
+  approvedElements PpapElement[] @relation("ApprovedBy")
+  auditLogs        AuditLog[]
+  uploadedDrawingFiles DrawingFile[] @relation("UploadedDrawingFiles")
+  ecnPrepared EcnRecord[] @relation("EcnPreparedBy")
+  ecnReviewed EcnRecord[] @relation("EcnReviewedBy")
+  ecnApproved EcnRecord[] @relation("EcnApprovedBy")
+  ceaDeclared CeaDetail[] @relation("CeaDeclaredBy")
+  sppDeclared SppDetail[] @relation("SppDeclaredBy")
+  calibrationsRecorded CalibrationRecord[] @relation("CalibrationRecordedBy")
+  pswSigned PswDetail[] @relation("PswSignedBy")
+  customerDispositionsRecorded CustomerDisposition[] @relation("CustomerDispositionRecordedBy")
+  dfmeaRowsResponsible DfmeaRow[] @relation("DfmeaRowResponsible")
+  pfmeaRowsResponsible PfmeaRow[] @relation("PfmeaRowResponsible")
+
+  @@map("users")
+}
+
+// ---------------------------------------------------------------------------
+// NextAuth (Prisma adapter) models
+// ---------------------------------------------------------------------------
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ---------------------------------------------------------------------------
+// PPAP level applicability matrix (AIAG 4th edition, seeded defaults)
+// ---------------------------------------------------------------------------
+
+model LevelApplicabilityRule {
+  id        String            @id @default(cuid())
+  level     Int // 1-5
+  elementNo Int // 0-18
+  rule      ApplicabilityRule
+
+  @@unique([level, elementNo])
+  @@map("level_applicability_rules")
+}
+
+// ---------------------------------------------------------------------------
+// PPAP
+// ---------------------------------------------------------------------------
+
+model Ppap {
+  id                  String       @id @default(cuid())
+  partRevisionId      String
+  partRevision        PartRevision @relation(fields: [partRevisionId], references: [id])
+  customerId          String
+  customer            Customer     @relation(fields: [customerId], references: [id])
+  level               Int
+  reasonForSubmission String?
+  submissionDate      DateTime?
+  approvalMode        ApprovalMode
+  /// OPEN → SUBMITTED (supplier signs the PSW) → CLOSED (customer approves
+  /// the PSW). A customer rejection of the PSW sets it back to OPEN with
+  /// the comments in lastRejectionComments. See lib/actions/psw.ts.
+  status                PpapStatus @default(OPEN)
+  statusChangedAt       DateTime?
+  lastRejectionComments String?
+  /// Final submission (pack page, lib/calc/submission-level.ts): the
+  /// supporting documents picked for level 2 / 4, and when the user
+  /// confirmed the level — the final-PPAP download appears only after that.
+  submissionElementNos Int[]     @default([])
+  submissionLevelSetAt DateTime?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  elements     PpapElement[]
+  auditLogs    AuditLog[]
+  checklistRows ChecklistRow[]
+
+  @@map("ppaps")
+}
+
+/// One row per AIAG element (elementNo 0-18: 0 = checklist cover,
+/// 1-18 = the 18 PPAP elements, element 11 covers both SPC sheets).
+/// Page-specific data lives in its own model keyed by ppapElementId —
+/// never duplicated here.
+model PpapElement {
+  id            String        @id @default(cuid())
+  ppapId        String
+  ppap          Ppap          @relation(fields: [ppapId], references: [id])
+  elementNo     Int
+  applicability Applicability
+  naReason      String?
+  status        ElementStatus @default(NOT_STARTED)
+  docNo         String?
+  revision      String        @default("00")
+  /// Set when an approved ECN names this element as affected; cleared
+  /// manually once the element has actually been revised.
+  revisionRequired Boolean    @default(false)
+
+  preparedById String?
+  preparedBy   User?     @relation("PreparedBy", fields: [preparedById], references: [id])
+  preparedAt   DateTime?
+
+  checkedById String?
+  checkedBy   User?     @relation("CheckedBy", fields: [checkedById], references: [id])
+  checkedAt   DateTime?
+
+  approvedById String?
+  approvedBy   User?     @relation("ApprovedBy", fields: [approvedById], references: [id])
+  approvedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  designRecordDetail     DesignRecordDetail?
+  specialCharacteristics SpecialCharacteristic[]
+  drawingFiles           DrawingFile[]
+  balloons               Balloon[]
+  ecnRecords             EcnRecord[]
+  ceaDetail              CeaDetail?
+  ceaAttachments         CeaAttachment[]
+  dfmeaDetail            DfmeaDetail?
+  customerDisposition    CustomerDisposition?
+  childParts             ChildPart[]
+  routes                 Route[]
+  pfmeaProcessSteps      PfmeaProcessStep[]
+  controlPlanDetail      ControlPlanDetail?
+  msaStudies             MsaStudy[]
+  dimensionalReportDetail DimensionalReportDetail?
+  rmtcReportDetail        RmtcReportDetail?
+  spcStudies              SpcStudy[]
+  labReports              LabReport[]
+  aarDetail               AarDetail?
+  aarCriteriaRows         AarCriteriaRow[]
+  sppDetail               SppDetail?
+  sppSamples              SppSample[]
+  sppFunctionalTests      SppFunctionalTest[]
+  sppPackagingPhotos      SppPackagingPhoto[]
+  masterSamples           MasterSample[]
+  ppapCheckingAids        PpapCheckingAid[]
+  csrCompliances          CsrCompliance[]
+  csrZoneMapPages         CsrZoneMapPage[]
+  pswDetail               PswDetail?
+
+  @@unique([ppapId, elementNo])
+  @@map("ppap_elements")
+}
+
+// ---------------------------------------------------------------------------
+// Element 0 — PPAP Checklist
+// ---------------------------------------------------------------------------
+
+/// One row per AIAG element (1-18) on the checklist cover page. Built
+/// fully editable per explicit user request — every field here is an
+/// independent override, NOT derived from the real PpapElement data for
+/// that elementNo. This deviates from the AIAG-standard "never typed"
+/// Status/auto-summarized Remarks described in CLAUDE.md's checklist
+/// notes; see that file for the reasoning.
+model ChecklistRow {
+  id              String   @id @default(cuid())
+  ppapId          String
+  ppap            Ppap     @relation(fields: [ppapId], references: [id])
+  elementNo       Int // 1-18
+  requiredOverride String? // free text, e.g. "Y" / "N"
+  statusOverride  String? // free text, e.g. "OK" / "NG" / "Pending"
+  remarks         String?
+  docRefLabel     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([ppapId, elementNo])
+  @@map("checklist_rows")
+}
+
+// ---------------------------------------------------------------------------
+// Element 1 — Design Record
+// ---------------------------------------------------------------------------
+
+/// The "Remarks" column that goes with each of the 9 particulars on the
+/// Design Record sheet. Part name / number / customer / drawing no / rev
+/// are read-only, derived from master data — only their remarks are stored
+/// here; everything else (material, heat treatment, surface finish) has
+/// both a value and a remark.
+model DesignRecordDetail {
+  id            String @id @default(cuid())
+  ppapElementId String @unique
+  ppapElement   PpapElement @relation(fields: [ppapElementId], references: [id])
+
+  partNameRemarks       String?
+  partNumberRemarks     String?
+  customerNameRemarks   String?
+  drawingNumberRemarks  String?
+  drawingRevisionRemarks String?
+
+  materialSpecId      String?
+  materialSpec        MaterialSpec? @relation(fields: [materialSpecId], references: [id])
+  materialSpecRemarks String?
+
+  heatTreatment        String?
+  heatTreatmentRemarks String?
+
+  surfaceFinish        String?
+  surfaceFinishRemarks String?
+
+  specialCharacteristicsRemarks String?
+
+  ballooningImageUrl  String?
+  ballooningImageName String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("design_record_details")
+}
+
+/// Reused by PFMEA, Control Plan and SPC — all keyed back to this
+/// Design Record element.
+model SpecialCharacteristic {
+  id            String    @id @default(cuid())
+  ppapElementId String
+  ppapElement   PpapElement @relation(fields: [ppapElementId], references: [id])
+  characteristic String
+  charClass     CharClass
+  symbol        String?
+  drawingRef    String?
+  sortOrder     Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  controlPlanRows ControlPlanRow[]
+  spcStudies      SpcStudy[]
+
+  @@map("special_characteristics")
+}
+
+/// Drawing/DWG/STEP file per revision. Uploading a new file marks all
+/// previous rows for the same element SUPERSEDED.
+model DrawingFile {
+  id            String     @id @default(cuid())
+  ppapElementId String
+  ppapElement   PpapElement @relation(fields: [ppapElementId], references: [id])
+  revision      String
+  fileUrl       String
+  fileName      String
+  fileType      String
+  status        FileStatus @default(ACTIVE)
+  uploadedById  String?
+  uploadedBy    User?      @relation("UploadedDrawingFiles", fields: [uploadedById], references: [id])
+  uploadedAt    DateTime   @default(now())
+
+  @@map("drawing_files")
+}
+
+/// One row per balloon on the ballooned drawing. This list is the source
+/// for the Dimensional Report (element 9) — see lib/data/design-record.ts.
+model Balloon {
+  id            String   @id @default(cuid())
+  ppapElementId String
+  ppapElement   PpapElement @relation(fields: [ppapElementId], references: [id])
+  balloonNo     Int
+  viewSection   String?
+  description   String?
+  nominal       String?
+  tolerance     String?
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  dimensionalReportRows DimensionalReportRow[]
+
+  @@unique([ppapElementId, balloonNo])
+  @@map("balloons")
+}
+
+// ---------------------------------------------------------------------------
+// Element 2 — ECN Record
+// ---------------------------------------------------------------------------
+
+enum ChangeType {
+  DESIGN
+  PROCESS
+  MATERIAL
+}
+
+enum ImpactLevel {
+  NONE
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum StockDisposition {
+  USE
+  REJECT
+  REWORK
+}
+
+enum EcnStatus {
+  DRAFT
+  REVIEWED
+  APPROVED
+}
+
+/// One ECN per change. Part/customer/drawing/revision fields are snapshots
+/// taken from master at creation time (editable afterward) — they
+/// deliberately don't live-track the master record, since an old ECN
+/// should keep showing what was true when it was raised.
+model EcnRecord {
+  id            String      @id @default(cuid())
+  ppapElementId String
+  ppapElement   PpapElement @relation(fields: [ppapElementId], references: [id])
+
+  ecnNumber String
+  ecnDate   DateTime?
+
+  partNameSnapshot        String?
+  partNumberSnapshot      String?
+  customerNameSnapshot    String?
+  drawingNumberSnapshot   String?
+  drawingRevisionSnapshot String?
+
+  department String?
+  changeType ChangeType?
+  reason            String?
+  existingCondition String?
+  proposedChange    String?
+
+  impactQualityLevel  ImpactLevel?
+  impactQualityNote   String?
+  impactCostLevel     ImpactLevel?
+  impactCostNote      String?
+  impactDeliveryLevel ImpactLevel?
+  impactDeliveryNote  String?
+
+  /// elementNo (1-18) of each PPAP element flagged as affected by this ECN.
+  affectedElementNos   Int[]
+  affectedDocsFreeText String?
+
+  stockDisposition   StockDisposition?
+  implementationDate DateTime?
+
+  status EcnStatus @default(DRAFT)
+
+  preparedById String?
+  preparedBy   User?     @relation("EcnPreparedBy", fields: [preparedById], references: [id])
+  preparedAt   DateTime?
+
+  reviewedById String?
+  reviewedBy   User?     @relation("EcnReviewedBy", fields: [reviewedById], references: [id])
+  reviewedAt   DateTime?
+
+  approvedById String?
+  approvedBy   User?     @relation("EcnApprovedBy", fields: [approvedById], references: [id])
+  approvedAt   DateTime?
+
+  /// Set when this ECN's approval creates the next PartRevision.
+  newPartRevisionId String?
+  newPartRevision   PartRevision? @relation(fields: [newPartRevisionId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("ecn_records")
+}
+
+// ---------------------------------------------------------------------------
+// Element 3 — Customer Engineering Approval (CEA)
+// ---------------------------------------------------------------------------
+
+enum CeaRequestType {
+  NEW_PART
+  ENGINEERING_CHANGE
+  DEVIATION
+  REVALIDATION
+}
+
+/// One CEA per element (the sheet is a single filled-in form, not a log).
+/// Section numbers in field comments match the sheet's 10 numbered
+/// sections; section 10 (Customer approval) is the shared
+/// CustomerDisposition model instead, since it's reused by AAR/PSW/etc.
+model CeaDetail {
+  id            String      @id @default(cuid())
+  ppapElementId String      @unique
+  ppapElement   PpapElement @relation(fields: [ppapElementId], references: [id])
+
+  // 1. Header
+  ceaNo   String?
+  ceaDate DateTime?
+
+  // 2. Request type
+  requestType CeaRequestType?
+
+  // 3. Change description
+  existingCondition String?
+  proposedChange    String?
+  changeReason      String?
+
+  // 4. Impact assessment
+  impactFitLevel          ImpactLevel?
+  impactFitNote           String?
+  impactFormLevel         ImpactLevel?
+  impactFormNote          String?
+  impactFunctionLevel     ImpactLevel?
+  impactFunctionNote      String?
+  impactQualityRiskLevel  ImpactLevel?
+  impactQualityRiskNote   String?
+  impactReliabilityLevel  ImpactLevel?
+  impactReliabilityNote   String?
+  impactRegulatoryLevel   ImpactLevel?
+  impactRegulatoryNote    String?
+
+  // 5. Validation & verification
+  testsPerformed String?
+  testStandard   String?
+  resultSummary  String?
+
+  // 6. PPAP status
+  submissionStatus String?
+
+  // 7. Deviation details (shown only when requestType = DEVIATION)
+  deviationDescription        String?
+  deviationQty                String?
+  deviationValidityPeriod     String?
+  deviationInterimContainment String?
+
+  // 8. Sample information
+  sampleQty             String?
+  sampleLotNo            String?
+  sampleSubmissionDate   DateTime?
+
+  // 9. Supplier declaration
+  declaredById String?
+  declaredBy   User?     @relation("CeaDeclaredBy", fields: [declaredById], references: [id])
+  declaredAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("cea_details")
+}
+
+/// Keyed directly off the element (not CeaDetail) so a file can be
+/// attached before the main CEA form has ever been saved.
+model CeaAttachment {
+  id            String      @id @default(cuid())
+  ppapElementId String
+  ppapElement   PpapElement @relation(fields: [ppapElementId], references: [id])
+  fileUrl       String
+  fileName      String
+  fileType      String
+  uploadedAt    DateTime    @default(now())
+
+  @@map("cea_attachments")
+}
+
+// ---------------------------------------------------------------------------
+// Customer disposition (shared across CEA / AAR / PSW / Sample Production
+// Part — one per element, keyed by ppapElementId). Behavior switches on
+// Ppap.approvalMode:
+//  - CUSTOMER_PORTAL: only a CUSTOMER_APPROVER user whose customerId
+//    matches the PPAP's customer may edit; everyone else is read-only.
+//    (The full separate customer-login dashboard/invite-email flow is
+//    deferred — see CLAUDE.md.)
+//  - SUPPLIER_UPLOAD: any supplier user may fill it in, but must attach
+//    the signed scan first; the UI shows "Recorded by <user> from signed
+//    copy" with a link to that file.
+// Either mode: Approved/Rejected sets the owning PpapElement's status to
+// CUSTOMER_APPROVED/CUSTOMER_REJECTED; Conditional leaves it unresolved.
+// ---------------------------------------------------------------------------
+
+enum CustomerDispositionStatus {
+  APPROVED
+  REJECTED
+  CONDITIONAL
+}
+
+model CustomerDisposition {
+  id            String      @id @default(cuid())
+  ppapElementId String      @unique
+  ppapElement   PpapElement @relation(fields: [ppapElementId], references: [id])
+
+  status               CustomerDispositionStatus?
+  comments             String?
+  customerName         String?
+  customerDesignation  String?
+  customerSignatureDate DateTime?
+
+  recordedById String?
+  recordedBy   User?   @relation("CustomerDispositionRecordedBy", fields: [recordedById], references: [id])
+
+  signedFileUrl  String?
+  signedFileName String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("customer_dispositions")
+}
+
+// ---------------------------------------------------------------------------
+// Element 4 — DFMEA
+// ---------------------------------------------------------------------------
+
+/// Header fields only — the grid rows are DfmeaRow. RPN/revised RPN are
+/// deliberately not stored columns: they're always S×O×D, computed via
+/// lib/calc/fmea.ts at display time so they can never drift from the
+/// underlying ratings.
+model DfmeaDetail {
+  id            String      @id @default(cuid())
+  ppapElementId String      @unique
+  ppapElement   PpapElement @relation(fields: [ppapElementId], references: [id])
+
+  dfmeaRef             String?
+  startDate            DateTime?
+  revision             String?
+  teamMemberIds        String[]
+  designResponsibility String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  rows DfmeaRow[]
+
+  @@map("dfmea_details")
+}
+
+model DfmeaRow {
+  id            String      @id @default(cuid())
+  dfmeaDetailId String
+  dfmeaDetail   DfmeaDetail @relation(fields: [dfmeaDetailId], references: [id])
+
+  item                      String?
+  potentialFailureMode      String?
+  effects                   String?
+  severity                  Int?
+  causes                    String?
+  occurrence                Int?
+  currentControlsPrevention String?
+  currentControlsDetection  String?
+  detection                 Int?
+  recommendedActions        String?
+
+  responsibleId String?
+  responsible   User?   @relation("DfmeaRowResponsible", fields: [responsibleId], references: [id])
+  targetDate    DateTime?
+  actionTaken   String?
+
+  revisedSeverity   Int?
+  revisedOccurrence Int?
+  revisedDetection  Int?
+
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("dfmea_rows")
+}
+
+// ---------------------------------------------------------------------------
+// Element 5 — Process Flow Chart
+// ---------------------------------------------------------------------------
+
+enum OperationSymbol {
+  OPERATION
+  INSPECTION
+  STORAGE
+  TRANSPORT
+  DELAY
+}
+
+/// Global process-step lookup, shared across PPAPs (not keyed to a
+/// PpapElement) — reused by PFMEA and Control Plan via
+/// lib/calc/process-flow.ts's step-list derivation.
+model Operation {
+  id                     String          @id @default(cuid())
+  code                   String          @unique
+  name                   String
+  symbol                 OperationSymbol
+  defaultInspectionAfter Boolean         @default(false)
+  sortOrder              Int             @default(0)
+
+  routeSteps RouteStep[]
+  pfmeaFailureModeTemplates PfmeaFailureModeTemplate[]
+
+  @@map("operations")
+}
+
+enum ChildPartSide {
+  LEFT
+  RIGHT
+}
+
+enum ChildPartType {
+  MAKE
+  BOP
+}
+
+enum MsaStudyType {
+  VARIABLE_GRR
+  ATTRIBUTE_AGREEMENT
+  BIAS
+  LINEARITY
+  STABILITY
+}
+
+enum MsaMethod {
+  AVERAGE_RANGE
+  ANOVA
+}
+
+/// One row per BOM line on the Process Flow Chart. `side` preserves the
+/// sheet's mirrored left/right layout (left column reads operations
+/// left-to-right, right column right-to-left, converging toward the
+/// centre) so the generated chart can reproduce it.
+model ChildPart {
+  id            String      @id @default(cuid())
+  ppapElementId String
+  ppapElement   PpapElement @relation(fields: [ppapElementId], references: [id])
+
+  itemNo         Int
+  partNo         String
+  description    String
+  qtyPerAssembly Int
+  side           ChildPartSide
+  type           ChildPartType @default(MAKE)
+
+  sketchImageUrl  String?
+  sketchFileName  String?
+
+  parentChildPartId String?
+  parentChildPart   ChildPart?  @relation("ChildPartParent", fields: [parentChildPartId], references: [id])
+  children          ChildPart[] @relation("ChildPartParent")
+
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  route Route?
+
+  @@unique([ppapElementId, itemNo])
+  @@map("child_parts")
+}
+
+/// One route per ChildPart, plus exactly one extra route per element with
+/// `childPartId = null` representing the main-assembly line (material
+/// receipt through packing & dispatch) shown converging in the chart's
+/// centre column.
+model Route {
+  id            String      @id @default(cuid())
+  ppapElementId String
+  ppapElement   PpapElement @relation(fields: [ppapElementId], references: [id])
+
+  childPartId String?    @unique
+  childPart   ChildPart? @relation(fields: [childPartId], references: [id])
+  label       String? // e.g. "Main Assembly" when childPartId is null
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  steps RouteStep[]
+
+  @@map("routes")
+}
+
+model RouteStep {
+  id      String @id @default(cuid())
+  routeId String
+  route   Route  @relation(fields: [routeId], references: [id])
+
+  operationId String
+  operation   Operation @relation(fields: [operationId], references: [id])
+  sequence    Int
+  machine     String?
+  note        String?
+
+  @@map("route_steps")
+}
+
+// ---------------------------------------------------------------------------
+// Element 6 — PFMEA
+// ---------------------------------------------------------------------------
+
+/// One row per distinct process step shown on the PFMEA grid. Populated by
+/// "Sync from PFC" (lib/pfmea-import.ts), which derives the ordered step
+/// list from element 5's routes (lib/calc/process-flow.ts) — the same
+/// function PFC's own code already anticipated reusing here. Steps are
+/// never deleted by a sync (PfmeaRow failure modes point at them); a step
+/// no longer present in the current PFC derivation is flagged instead.
+model PfmeaProcessStep {
+  id            String      @id @default(cuid())
+  ppapElementId String
+  ppapElement   PpapElement @relation(fields: [ppapElementId], references: [id])
+
+  operationCode     String? // the Operation.code it was synced from, if any
+  name              String
+  sortOrder         Int
+  removedFromSource Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  rows PfmeaRow[]
+
+  @@map("pfmea_process_steps")
+}
+
+/// One potential failure mode for a process step. RPN/AP/revised-RPN/
+/// revised-AP are deliberately not stored — always computed from S/O/D via
+/// lib/calc/fmea.ts and lib/calc/ap.ts, per CLAUDE.md's calc-module
+/// convention. importedApText/importedRevisedApText retain whatever was
+/// literally typed in an imported sheet's AP column, purely so the UI can
+/// flag disagreement with the computed value — never used for display on
+/// their own.
+model PfmeaRow {
+  id                 String           @id @default(cuid())
+  pfmeaProcessStepId String
+  pfmeaProcessStep   PfmeaProcessStep @relation(fields: [pfmeaProcessStepId], references: [id])
+
+  processFunction            String?
+  potentialFailureMode       String?
+  potentialEffect            String?
+  severity                   Int?
+  potentialCause             String?
+  occurrence                 Int?
+  currentPreventionControls  String?
+  currentDetectionControls   String?
+  detection                  Int?
+  importedApText             String?
+  recommendedActions         String?
+
+  responsibleId String?
+  responsible   User?     @relation("PfmeaRowResponsible", fields: [responsibleId], references: [id])
+  // Imported sheets often name a role/department ("QA Inspector",
+  // "Maintenance") rather than a registered person — kept as a fallback
+  // label when responsibleId isn't resolvable to a real User.
+  responsibleText String?
+  targetDate      DateTime?
+  actionTaken     String?
+
+  revisedSeverity       Int?
+  revisedOccurrence     Int?
+  revisedDetection      Int?
+  importedRevisedApText String?
+
+  revisionNo   String?
+  revisionDate DateTime?
+
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("pfmea_rows")
+}
+
+/// Reusable "typical failure mode" per operation — "save a row as
+/// template" / "Insert from library" in the spec. Global (like Operation
+/// itself), so organizational knowledge accumulates across PPAPs.
+model PfmeaFailureModeTemplate {
+  id          String    @id @default(cuid())
+  operationId String
+  operation   Operation @relation(fields: [operationId], references: [id])
+
+  processFunction           String?
+  potentialFailureMode      String?
+  potentialEffect           String?
+  severity                  Int?
+  potentialCause             String?
+  occurrence                Int?
+  currentPreventionControls String?
+  currentDetectionControls  String?
+  detection                 Int?
+  recommendedActions        String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("pfmea_failure_mode_templates")
+}
+
+// ---------------------------------------------------------------------------
+// Element 7 — Control Plan
+// ---------------------------------------------------------------------------
+
+/// Instrument master — the "16. Checking Aids" master list of measuring
+/// instruments. Global (like Operation), not keyed to a PPAP; Control
+/// Plan, Dimensional, MSA and SPC pick from it, and element 16 lists the
+/// ones each part uses. Status (VALID / DUE_SOON / OVERDUE /
+/// NOT_CALIBRATED) is never stored — it's computed from calibrationDue at
+/// render time (lib/calc/calibration.ts).
+model Instrument {
+  id                         String    @id @default(cuid())
+  slNo                       Int?
+  description                String
+  range                      String?
+  serialNo                   String?
+  ieIdNo                     String?   @unique
+  make                       String?
+  calibrationFrequencyMonths Int?
+  calibratedOn               DateTime?
+  /// The effective due date: calibratedOn + calibrationFrequencyMonths,
+  /// unless calibrationDueOverridden (then whatever was entered/imported —
+  /// e.g. the sheet's own "1 year − 1 day" dates). Kept stored so every
+  /// picker/query can use it directly.
+  calibrationDue             DateTime?
+  calibrationDueOverridden   Boolean   @default(false)
+  /// Not in the source "Checking Aids" sheet for most rows — populated
+  /// only where a real recorded value exists elsewhere (e.g. a Control
+  /// Plan row that named this exact instrument with a least count).
+  /// Left null rather than invented; ControlPlanRow.leastCountText is the
+  /// free-text fallback.
+  leastCount String?
+  location   String?
+  remarks    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  controlPlanRows       ControlPlanRow[]
+  msaStudies            MsaStudy[]
+  dimensionalReportRows DimensionalReportRow[]
+  spcStudies            SpcStudy[]
+  calibrationRecords    CalibrationRecord[]
+  ppapCheckingAids      PpapCheckingAid[]
+
+  @@map("instruments")
+}
+
+/// Calibration history per instrument. Recording a calibration newer than
+/// the instrument's current one moves its calibratedOn/calibrationDue.
+model CalibrationRecord {
+  id           String     @id @default(cuid())
+  instrumentId String
+  instrument   Instrument @relation(fields: [instrumentId], references: [id])
+
+  calibratedOn       DateTime
+  dueDate            DateTime?
+  agency             String?
+  certificateNo      String?
+  certificateFileUrl  String?
+  certificateFileName String?
+  certificateFileType String?
+  remarks            String?
+
+  recordedById String?
+  recordedBy   User?    @relation("CalibrationRecordedBy", fields: [recordedById], references: [id])
+  createdAt    DateTime @default(now())
+
+  @@map("calibration_records")
+}
+
+enum FixtureType {
+  CHECKING_FIXTURE
+  TEMPLATE
+  JIG
+  GAUGE
+  OTHER
+}
+
+enum FixtureStatus {
+  ACTIVE
+  UNDER_VALIDATION
+  REJECTED
+  RETIRED
+}
+
+/// Checking fixtures, templates, jigs and special gauges — global register
+/// alongside the instrument master. A fixture linked to a part shows up on
+/// that part's element 16 automatically.
+model Fixture {
+  id          String        @id @default(cuid())
+  code        String        @unique
+  description String
+  type        FixtureType   @default(CHECKING_FIXTURE)
+  partId      String?
+  part        Part?         @relation(fields: [partId], references: [id])
+  drawingNo   String?
+  drawingFileUrl  String?
+  drawingFileName String?
+  validationDate          DateTime?
+  validationRecordUrl     String?
+  validationRecordName    String?
+  status      FixtureStatus @default(ACTIVE)
+  location    String?
+  remarks     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ppapCheckingAids PpapCheckingAid[]
+
+  @@map("fixtures")
+}
+
+/// Element 16 manual additions: an instrument or fixture listed for this
+/// PPAP's part beyond the ones auto-collected from elements 7, 8, 9, 11.
+model PpapCheckingAid {
+  id            String      @id @default(cuid())
+  ppapElementId String
+  ppapElement   PpapElement @relation(fields: [ppapElementId], references: [id])
+  instrumentId  String?
+  instrument    Instrument? @relation(fields: [instrumentId], references: [id])
+  fixtureId     String?
+  fixture       Fixture?    @relation(fields: [fixtureId], references: [id])
+  createdAt     DateTime    @default(now())
+
+  @@unique([ppapElementId, instrumentId])
+  @@unique([ppapElementId, fixtureId])
+  @@map("ppap_checking_aids")
+}
+
+/// Small key/value app settings, e.g. "calibration.dueSoonDays".
+model AppSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@map("app_settings")
+}
+
+/// One per PpapElement (element 7). Mirrors the sheet's header block —
+/// mostly plain fields rather than FKs, since this is a printed-document
+/// header, not data other pages branch on.
+model ControlPlanDetail {
+  id            String      @id @default(cuid())
+  ppapElementId String      @unique
+  ppapElement   PpapElement @relation(fields: [ppapElementId], references: [id])
+
+  phasePrototype  Boolean @default(false)
+  phasePreLaunch  Boolean @default(false)
+  phaseProduction Boolean @default(false)
+
+  controlPlanNo String?
+  revisionNo    String?
+  dateOrig      DateTime?
+  dateRev       DateTime?
+
+  partDescription      String?
+  customerPartNo       String?
+  customerPartRevision String?
+  partNo               String?
+  partRevision         String?
+  supplier             String?
+  plant                String?
+  material             String?
+  keyContactPhone      String?
+  coreTeamText         String?
+
+  supplierPlantApprovalDate       DateTime?
+  customerEngineeringApprovalDate DateTime?
+  customerQualityApprovalDate     DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  rows ControlPlanRow[]
+
+  @@map("control_plan_details")
+}
+
+model ControlPlanRow {
+  id                  String            @id @default(cuid())
+  controlPlanDetailId String
+  controlPlanDetail   ControlPlanDetail @relation(fields: [controlPlanDetailId], references: [id])
+
+  processNameOperation String?
+  machineDeviceJigTools String?
+  stageNo               Int?
+
+  productCharacteristic String?
+  processCharacteristic String?
+
+  specialCharacteristicId String?
+  specialCharacteristic   SpecialCharacteristic? @relation(fields: [specialCharacteristicId], references: [id])
+
+  productProcessSpecification   String?
+  evaluationMeasurementTechnique String?
+
+  instrumentId   String?
+  instrument     Instrument? @relation(fields: [instrumentId], references: [id])
+  /// Free-text fallback when no Instrument is picked (matches the
+  /// imported sample, where least count was typed directly) or to
+  /// override the picked instrument's recorded value.
+  leastCountText String?
+
+  /// Free text, not a strict enum: the sheet's own sample data has
+  /// compound values ("W / I", "P & Q") beyond its own single-letter
+  /// legend (W | P | I | Q).
+  controlInCharge String?
+
+  sampleSize      String?
+  sampleFrequency String?
+  recordingRequired Boolean?
+  controlMethod   String?
+  /// A | B | C | D per the sheet's reaction-plan legend.
+  reactionPlan    String?
+
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  msaStudies MsaStudy[]
+
+  @@map("control_plan_rows")
+}
+
+// ---------------------------------------------------------------------------
+// Element 8 — MSA
+// ---------------------------------------------------------------------------
+
+/// One study per PpapElement list entry (element 8 can hold several). The
+/// sheet in the reference workbook is a pasted-screenshot template with no
+/// extractable sample data (see CLAUDE.md's known-quirks list), so this is a
+/// native replacement rather than an import target.
+model MsaStudy {
+  id            String      @id @default(cuid())
+  ppapElementId String
+  ppapElement   PpapElement @relation(fields: [ppapElementId], references: [id])
+
+  studyType MsaStudyType @default(VARIABLE_GRR)
+  method    MsaMethod    @default(AVERAGE_RANGE)
+
+  studyDate DateTime?
+  units     String?
+
+  gaugeId   String?
+  gauge     Instrument? @relation(fields: [gaugeId], references: [id])
+  gaugeType String?
+
+  controlPlanRowId   String?
+  controlPlanRow     ControlPlanRow? @relation(fields: [controlPlanRowId], references: [id])
+  /// Free-text fallback/override when no Control Plan row is picked, or to
+  /// show a label different from the row's own characteristic text.
+  characteristicText String?
+
+  specification String?
+  testNo        String?
+
+  appraiserAName String?
+  appraiserBName String?
+  appraiserCName String?
+
+  parts      Int @default(10)
+  appraisers Int @default(3)
+  trials     Int @default(3)
+
+  usl Float?
+  lsl Float?
+
+  /// Free-text capture for the optional Attribute Agreement/Bias/
+  /// Linearity/Stability study types — these don't yet have a dedicated
+  /// calculator; Variable GR&R (Average & Range, optionally ANOVA) is the
+  /// fully computed path.
+  notes String?
+
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  dataPoints MsaDataPoint[]
+
+  @@map("msa_studies")
+}
+
+/// One reading per appraiser x part x trial. Indexes are 0-based.
+model MsaDataPoint {
+  id         String   @id @default(cuid())
+  msaStudyId String
+  msaStudy   MsaStudy @relation(fields: [msaStudyId], references: [id])
+
+  appraiserIndex Int
+  partIndex      Int
+  trialIndex     Int
+  value          Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([msaStudyId, appraiserIndex, partIndex, trialIndex])
+  @@map("msa_data_points")
+}
+
+// ---------------------------------------------------------------------------
+// Element 9 — Dimensional Report
+// ---------------------------------------------------------------------------
+
+/// One per PpapElement (element 9). Customer/drawing no./part name in the
+/// sheet's header are real master data already available via
+/// Ppap.customer / PartRevision — read at render time, not duplicated here.
+model DimensionalReportDetail {
+  id            String      @id @default(cuid())
+  ppapElementId String      @unique
+  ppapElement   PpapElement @relation(fields: [ppapElementId], references: [id])
+
+  reportDate DateTime?
+  reportSlNo String?
+  comments   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  rows          DimensionalReportRow[]
+  sampleColumns DimensionalReportSampleColumn[]
+
+  @@map("dimensional_report_details")
+}
+
+/// Configurable measurement columns (default "T/W" and "F/W", as in the
+/// sheet) — shared across every row in the report, not per-row.
+model DimensionalReportSampleColumn {
+  id                        String                  @id @default(cuid())
+  dimensionalReportDetailId String
+  dimensionalReportDetail   DimensionalReportDetail @relation(fields: [dimensionalReportDetailId], references: [id])
+
+  label     String
+  sortOrder Int    @default(0)
+
+  readings DimensionalReportReading[]
+
+  @@map("dimensional_report_sample_columns")
+}
+
+/// One row per inspected dimension. `slNo` is a String, not an Int, because
+/// the real sheet's balloon numbering includes lettered sub-items ("60 A",
+/// "60 B", "127 A") alongside plain numbers. `balloonId` links back to the
+/// element-1 balloon list when a row was generated from it, but the row
+/// still carries its own fields (same pattern as ControlPlanRow's optional
+/// specialCharacteristicId link) so imported/manually-added rows don't need
+/// a balloon at all.
+model DimensionalReportRow {
+  id                        String                  @id @default(cuid())
+  dimensionalReportDetailId String
+  dimensionalReportDetail   DimensionalReportDetail @relation(fields: [dimensionalReportDetailId], references: [id])
+
+  balloonId String?
+  balloon   Balloon? @relation(fields: [balloonId], references: [id])
+
+  slNo                 String
+  view                 String?
+  parameterDescription String?
+  designDimensionText  String?
+  toleranceText        String?
+
+  instrumentId String?
+  instrument   Instrument? @relation(fields: [instrumentId], references: [id])
+  /// The real sheet's short codes ("MT", "VC", "BP") don't map 1:1 to a
+  /// specific seeded Instrument — e.g. "MT" could be either of the two
+  /// seeded Measuring Tapes — so import preserves the raw code here rather
+  /// than guessing which one; instrumentId is left for a manual pick.
+  instrumentUsedText String?
+
+  remarks   String?
+  sortOrder Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  readings DimensionalReportReading[]
+
+  @@map("dimensional_report_rows")
+}
+
+/// One actual measurement per row x sample column. OK/NG is always derived
+/// from value vs. lib/calc/tolerance.ts, never stored.
+model DimensionalReportReading {
+  id                     String                        @id @default(cuid())
+  dimensionalReportRowId String
+  dimensionalReportRow   DimensionalReportRow          @relation(fields: [dimensionalReportRowId], references: [id])
+  sampleColumnId         String
+  sampleColumn           DimensionalReportSampleColumn @relation(fields: [sampleColumnId], references: [id])
+
+  value Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([dimensionalReportRowId, sampleColumnId])
+  @@map("dimensional_report_readings")
+}
+
+// ---------------------------------------------------------------------------
+// Element 10 — Material / Performance Test Results (RM Test Reports)
+// ---------------------------------------------------------------------------
+
+/// One per PpapElement (element 10). Customer/supplier/part name/part
+/// number in the sheet's header are real master data already available via
+/// Ppap.customer / PartRevision.part — read at render time, not duplicated
+/// here. Only the fields the sheet adds beyond master data (project name,
+/// other ref, code no.) and the configurable PO-size tolerance live here.
+model RmtcReportDetail {
+  id            String      @id @default(cuid())
+  ppapElementId String      @unique
+  ppapElement   PpapElement @relation(fields: [ppapElementId], references: [id])
+
+  projectName  String?
+  otherRef     String?
+  codeNo       String?
+  supplierName String?
+
+  /// PO-size tolerance applied to every row's observed-vs-required plate
+  /// size (lib/calc/plate.ts). Thickness is a tight rolling tolerance;
+  /// width/length default wide because raw plate is deliberately cut
+  /// oversize as machining stock — see plate.ts for the real sample's
+  /// observed deviations these defaults were picked against.
+  thicknessToleranceMm Decimal @default(0.3) @db.Decimal(6, 2)
+  widthToleranceMm     Decimal @default(30) @db.Decimal(8, 2)
+  lengthToleranceMm    Decimal @default(30) @db.Decimal(8, 2)
+
+  reportRemarks String?
+
+  customerWitnessName String?
+  customerWitnessAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  rows RmtcReportRow[]
+
+  @@map("rmtc_report_details")
+}
+
+/// One row per raw-material lot. heatNo traceability (heat -> lots ->
+/// lab reports) is a cross-PPAP search, not a DB constraint, since the
+/// same mill heat can legitimately supply more than one part.
+model RmtcReportRow {
+  id                 String           @id @default(cuid())
+  rmtcReportDetailId String
+  rmtcReportDetail   RmtcReportDetail @relation(fields: [rmtcReportDetailId], references: [id])
+
+  slNo   String
+  partNo String?
+
+  materialSpecId   String?
+  materialSpec     MaterialSpec? @relation(fields: [materialSpecId], references: [id])
+  /// Verbatim "STANDARD GRADE" text when import couldn't match an existing
+  /// MaterialSpec row (kept for display/traceability rather than dropped).
+  materialSpecText String?
+
+  requiredSizeText String? // "10X2000X6300" (T x W x L, mm) — lib/calc/plate.ts
+  qtyNos           Int?
+  observedSizeText String?
+
+  millTcNo   String?
+  millTcDate DateTime?
+
+  heatNo       String?
+  plateNo      String?
+  materialIdNo String?
+  labReportNo  String?
+  remarks      String?
+
+  mtcFileUrl  String?
+  mtcFileName String?
+  mtcFileType String?
+
+  sortOrder Int @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  labReports LabReport[]
+
+  @@map("rmtc_report_rows")
+}
+
+// ---------------------------------------------------------------------------
+// Element 11 — SPC Results (replaces the two sheets "11. SPC Results-1" —
+// X̄-R study with histogram — and "11. SPC Results-2" — individuals run
+// chart — with one study list; one subgroup grid per study drives both
+// views, see lib/calc/spc.ts).
+// ---------------------------------------------------------------------------
+
+/// One study per PpapElement (element 11 can hold several). The
+/// characteristic is restricted in the UI to the Control Plan's special
+/// characteristics; usl/lsl/instrument/leastCount are pre-filled from the
+/// matching Control Plan row when picked (lib/calc/tolerance.ts), then
+/// stored concretely here — same "auto-filled, still editable" convention
+/// as MsaStudy.
+model SpcStudy {
+  id            String      @id @default(cuid())
+  ppapElementId String
+  ppapElement   PpapElement @relation(fields: [ppapElementId], references: [id])
+
+  /// Required in the UI — the picker only lists this PPAP's Control Plan
+  /// special characteristics (no free-text fallback, unlike MsaStudy).
+  specialCharacteristicId String?
+  specialCharacteristic   SpecialCharacteristic? @relation(fields: [specialCharacteristicId], references: [id])
+
+  usl      Float?
+  lsl      Float?
+  specText String?
+
+  instrumentId   String?
+  instrument     Instrument? @relation(fields: [instrumentId], references: [id])
+  leastCountText String?
+
+  machine   String?
+  operation String?
+  studyDate DateTime?
+  dcNo      String?
+  qty       Int?
+  decimals  Int     @default(3)
+
+  subgroupSize  Int @default(5)
+  subgroupCount Int @default(5)
+
+  /// Verdict thresholds — "from Customer", overridable per study.
+  cpkAcceptableMin  Float @default(1.67)
+  cpkConditionalMin Float @default(1.33)
+
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  readings SpcReading[]
+
+  @@map("spc_studies")
+}
+
+/// One reading per subgroup x within-subgroup position. Row-major
+/// flattening (subgroupIndex, then withinIndex) is the individuals run
+/// chart's sequence — one grid, no double entry.
+model SpcReading {
+  id         String   @id @default(cuid())
+  spcStudyId String
+  spcStudy   SpcStudy @relation(fields: [spcStudyId], references: [id])
+
+  subgroupIndex Int
+  withinIndex   Int
+  value         Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([spcStudyId, subgroupIndex, withinIndex])
+  @@map("spc_readings")
+}
+
+// ---------------------------------------------------------------------------
+// Element 12 — Lab Reports / Qualified Laboratory Documentation
+// ---------------------------------------------------------------------------
+
+/// Global accredited-lab registry (like Instrument/MaterialSpec, not
+/// per-PPAP). An expired lab (validUntil in the past, or never set) is
+/// blocked from being picked for a new report — see lib/calc/lab.ts.
+model LabMaster {
+  id                 String    @id @default(cuid())
+  name               String
+  accreditationBody  String? // "ISO/IEC 17025", "NABL", or free text
+  certificateNo      String?
+  scope              String?
+  certificatePdfUrl  String?
+  certificatePdfName String?
+  certificatePdfType String?
+  validUntil         DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  labReports LabReport[]
+
+  @@map("lab_masters")
+}
+
+/// One report per PpapElement (element 12 can hold several, one per lot/
+/// test batch). Customer/part/part no./drawing no./revision/PPAP level in
+/// the sheet's header are real master data already available via
+/// Ppap/PartRevision — read at render time, not duplicated here.
+model LabReport {
+  id            String      @id @default(cuid())
+  ppapElementId String
+  ppapElement   PpapElement @relation(fields: [ppapElementId], references: [id])
+
+  /// The submitting/manufacturing company — free text, same convention as
+  /// RmtcReportDetail.supplierName (no Supplier FK wired up yet).
+  companyName String?
+
+  labId String?
+  lab   LabMaster? @relation(fields: [labId], references: [id])
+
+  reportNo String?
+  testDate DateTime?
+
+  materialSpecId    String?
+  materialSpec      MaterialSpec? @relation(fields: [materialSpecId], references: [id])
+  materialGradeText String?
+
+  /// "Heat/Batch No" picked from element 10 (RM Test Reports); free-text
+  /// fallback when no matching row exists yet, same pattern as
+  /// DimensionalReportRow.balloonId.
+  rmtcReportRowId String?
+  rmtcReportRow   RmtcReportRow? @relation(fields: [rmtcReportRowId], references: [id])
+  heatBatchNoText String?
+
+  sampleQty            Int?
+  manufacturingProcess String?
+  heatTreatmentStatus  String?
+
+  labPdfUrl  String?
+  labPdfName String?
+  labPdfType String?
+
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  testDetails       LabTestDetail[]
+  mechanicalResults LabMechanicalResult[]
+  chemicalResults   LabChemicalResult[]
+  paintResults      LabPaintResult[]
+
+  @@map("lab_reports")
+}
+
+/// Which tests were performed and how — default 6 rows seeded the first
+/// time a report is touched (chemical analysis, tensile, hardness, impact,
+/// coating thickness (DFT), adhesion), editable/removable thereafter.
+model LabTestDetail {
+  id          String    @id @default(cuid())
+  labReportId String
+  labReport   LabReport @relation(fields: [labReportId], references: [id])
+
+  testName           String
+  acceptanceCriteria String?
+  methodEquipment    String?
+  standard           String?
+  sortOrder          Int     @default(0)
+
+  @@map("lab_test_details")
+}
+
+/// requirementMin/Max are copied from the selected MaterialSpec whenever
+/// it changes (ysMinMpa, utsMinMpa/Max, elongationMinPct, impactMinJ) —
+/// not independently editable; see lib/actions/lab.ts. Hardness has no
+/// numeric columns on MaterialSpec (hardnessNote is free text), so its
+/// min/max are parsed from that note when it states limits ("Max 160 HB",
+/// "120-160 HV" — lib/calc/lab.ts parseLimitText); a qualitative note
+/// leaves them null and the row keeps the manual "—" status, same graceful
+/// "can't judge it" fallback as every other free-text spec in this app.
+model LabMechanicalResult {
+  id          String    @id @default(cuid())
+  labReportId String
+  labReport   LabReport @relation(fields: [labReportId], references: [id])
+
+  property        LabMechanicalProperty
+  requirementMin  Float?
+  requirementMax  Float?
+  requirementText String?
+  result          Float?
+  unit            String?
+  remark          String?
+
+  @@unique([labReportId, property])
+  @@map("lab_mechanical_results")
+}
+
+/// requirementMin/Max copied from MaterialSpec's cMin/cMax, mnMin/mnMax,
+/// etc. OTHER maps to MaterialSpec.otherNote (free text, no auto status).
+model LabChemicalResult {
+  id          String    @id @default(cuid())
+  labReportId String
+  labReport   LabReport @relation(fields: [labReportId], references: [id])
+
+  element         LabChemicalElement
+  requirementMin  Float?
+  requirementMax  Float?
+  requirementText String?
+  result          Float?
+
+  @@unique([labReportId, element])
+  @@map("lab_chemical_results")
+}
+
+/// requirementText is best-effort auto-filled from the matching Control
+/// Plan/CSR row (e.g. Gloss Value -> "80 GU to 90 GU") when one exists;
+/// resultNumeric drives auto status via lib/calc/tolerance.ts's
+/// parseRangeText when the requirement is itself numeric (DFT, Gloss) —
+/// Adhesion/Visual are typically qualitative ("No peel off", "OK") and
+/// stay manual, same "—" fallback as elsewhere.
+model LabPaintResult {
+  id          String    @id @default(cuid())
+  labReportId String
+  labReport   LabReport @relation(fields: [labReportId], references: [id])
+
+  property        LabPaintProperty
+  requirementText String?
+  resultText      String?
+  resultNumeric   Float?
+  unit            String?
+  remark          String?
+
+  @@unique([labReportId, property])
+  @@map("lab_paint_results")
+}
+
+// ---------------------------------------------------------------------------
+// Element 13 — Appearance Approval Report (AAR), sheet "13. AAR"
+// ---------------------------------------------------------------------------
+
+enum AarSubmissionReason {
+  NEW_PART
+  ENGINEERING_CHANGE
+  TOOLING_CHANGE
+  SUPPLIER_CHANGE
+  OTHER
+}
+
+enum AarProductionCondition {
+  PROTOTYPE
+  TRIAL_RUN
+  MASS_PRODUCTION
+}
+
+enum AarOverallResult {
+  APPROVED
+  CONDITIONALLY_APPROVED
+  REJECTED
+}
+
+/// Sections 1, 3, 4 and 5 of the sheet. Supplier name/code, customer, part
+/// name/no., revision and submission level are master data (Supplier, Ppap,
+/// PartRevision) read at render time, not stored here. Section 6's customer
+/// approval is the shared CustomerDisposition; Prepared/Reviewed are the
+/// PpapElement's prepared/checked signatures.
+model AarDetail {
+  id            String      @id @default(cuid())
+  ppapElementId String      @unique
+  ppapElement   PpapElement @relation(fields: [ppapElementId], references: [id])
+
+  // 1. Header
+  reportDate            DateTime?
+  submissionReason      AarSubmissionReason?
+  submissionReasonOther String?
+
+  // 3. Sample information — free text as on the sheet ("2Nos",
+  // "NBL-01, NBL-02"); sample IDs will default from element 14 once built.
+  sampleSize          String?
+  samplesEvaluated    String?
+  sampleIds           String?
+  productionCondition AarProductionCondition?
+
+  // 4. Master sample reference — will default from element 15 once built.
+  masterSampleNo           String?
+  masterSampleApprovedBy   String?
+  masterSampleApprovalDate DateTime?
+  masterSampleLocation     String?
+
+  // 5. Evaluation summary
+  overallResult        AarOverallResult?
+  deviationDetails     String?
+  correctiveActionPlan String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("aar_details")
+}
+
+/// Section 2 grid. The 8 sheet rows are created on first visit (see
+/// lib/aar.ts); extra rows may be added. labPaintProperty marks the rows
+/// whose Result is pulled from element 12's Paint results (DFT, Adhesion,
+/// Gloss).
+model AarCriteriaRow {
+  id            String      @id @default(cuid())
+  ppapElementId String
+  ppapElement   PpapElement @relation(fields: [ppapElementId], references: [id])
+
+  sortOrder          Int               @default(0)
+  parameter          String
+  specification      String?
+  evaluationMethod   String?
+  acceptanceCriteria String?
+  result             String?
+  labPaintProperty   LabPaintProperty?
+
+  photos AarPhoto[]
+
+  @@map("aar_criteria_rows")
+}
+
+/// Photo evidence per appearance parameter.
+model AarPhoto {
+  id               String         @id @default(cuid())
+  aarCriteriaRowId String
+  aarCriteriaRow   AarCriteriaRow @relation(fields: [aarCriteriaRowId], references: [id])
+  fileUrl          String
+  fileName         String
+  fileType         String
+  uploadedAt       DateTime       @default(now())
+
+  @@map("aar_photos")
+}
+
+// ---------------------------------------------------------------------------
+// Element 14 — Sample Production Part, sheet "14. Sample Production Part".
+// Sections 1, 3, 4, 5, 7 and 8 are read at render time from other pages
+// (master data, elements 5-10, 12, 13, 16) — see lib/spp.ts — so only the
+// sections the supplier actually types are stored here.
+// ---------------------------------------------------------------------------
+
+enum SppTestStatus {
+  OK
+  NG
+}
+
+/// Sections 1 (date), 9 (packaging) and 10 (declaration signatory).
+model SppDetail {
+  id            String      @id @default(cuid())
+  ppapElementId String      @unique
+  ppapElement   PpapElement @relation(fields: [ppapElementId], references: [id])
+
+  reportDate DateTime?
+
+  packingMethod    String?
+  labelling        String?
+  protectionMethod String?
+
+  declaredById String?
+  declaredBy   User?     @relation("SppDeclaredBy", fields: [declaredById], references: [id])
+  declaredAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("spp_details")
+}
+
+/// Section 2 register: one row per submitted sample (e.g. "NBL-01"). The
+/// sheet's "Sample Quantity Submitted" is the row count. Each row prints a
+/// QR sample tag.
+model SppSample {
+  id            String      @id @default(cuid())
+  ppapElementId String
+  ppapElement   PpapElement @relation(fields: [ppapElementId], references: [id])
+
+  sampleId          String
+  lotBatchNo        String?
+  manufacturingDate DateTime?
+  shift             String?
+  machineNo         String?
+  cavityNo          String?
+  sortOrder         Int       @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([ppapElementId, sampleId])
+  @@map("spp_samples")
+}
+
+/// Section 6 — the only results grid the supplier types on this page.
+model SppFunctionalTest {
+  id            String      @id @default(cuid())
+  ppapElementId String
+  ppapElement   PpapElement @relation(fields: [ppapElementId], references: [id])
+
+  testName      String
+  specification String?
+  result        String?
+  status        SppTestStatus?
+  sortOrder     Int            @default(0)
+
+  @@map("spp_functional_tests")
+}
+
+/// Section 9 packaging photos.
+model SppPackagingPhoto {
+  id            String      @id @default(cuid())
+  ppapElementId String
+  ppapElement   PpapElement @relation(fields: [ppapElementId], references: [id])
+  fileUrl       String
+  fileName      String
+  fileType      String
+  uploadedAt    DateTime    @default(now())
+
+  @@map("spp_packaging_photos")
+}
+
+// ---------------------------------------------------------------------------
+// Element 15 — Master Sample, sheet "15. Master Sample"
+// ---------------------------------------------------------------------------
+
+enum MasterSampleStatus {
+  ACTIVE
+  SUPERSEDED
+  DISPOSED
+}
+
+/// One register row. Part name/no., customer, drawing no., rev and PPAP
+/// level are the owning PPAP's master data (via ppapElement → Ppap →
+/// PartRevision), read at render time, not stored. Expiry is always
+/// approvalDate + retentionYears (lib/calc/master-sample.ts), never stored.
+/// Approving element 15 on a newer revision of the same part supersedes
+/// the older revisions' ACTIVE rows (lib/master-sample.ts).
+model MasterSample {
+  id            String      @id @default(cuid())
+  ppapElementId String
+  ppapElement   PpapElement @relation(fields: [ppapElementId], references: [id])
+
+  sampleId        String
+  approvalDate    DateTime?
+  storageLocation String?
+  retentionYears  Int?
+  status          MasterSampleStatus @default(ACTIVE)
+  remarks         String?
+
+  /// Set by auto-supersede: when, and by which PPAP (newer revision).
+  supersededAt       DateTime?
+  supersededByPpapId String?
+
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  images MasterSampleImage[]
+
+  @@unique([ppapElementId, sampleId])
+  @@map("master_samples")
+}
+
+/// The sheet's "Image Ref." area — several photos per master sample.
+model MasterSampleImage {
+  id             String       @id @default(cuid())
+  masterSampleId String
+  masterSample   MasterSample @relation(fields: [masterSampleId], references: [id])
+  fileUrl        String
+  fileName       String
+  fileType       String
+  uploadedAt     DateTime     @default(now())
+
+  @@map("master_sample_images")
+}
+
+// ---------------------------------------------------------------------------
+// Element 17 — Customer Specific Requirements, sheet "17. CSR"
+// ---------------------------------------------------------------------------
+
+/// CSR library section, per customer — reused by every part/PPAP of that
+/// customer. For appearance zones `code` is the zone letter (A/B/C) and
+/// `colour` the zone colour used on zone maps.
+model CsrSection {
+  id          String   @id @default(cuid())
+  customerId  String
+  customer    Customer @relation(fields: [customerId], references: [id])
+  code        String
+  title       String
+  description String?
+  isZone      Boolean  @default(false)
+  colour      String?
+  /// Optional illustration (e.g. the sheet's "inside of the frame is in zone C" picture).
+  imageUrl    String?
+  imageName   String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  requirements CsrRequirement[]
+
+  @@unique([customerId, code])
+  @@map("csr_sections")
+}
+
+/// One requirement row. `criteriaKey` tags rules other pages read as
+/// criteria (GLOSS, DFT, VIEWING_DISTANCE, ...) — see lib/calc/csr.ts.
+model CsrRequirement {
+  id          String     @id @default(cuid())
+  sectionId   String
+  section     CsrSection @relation(fields: [sectionId], references: [id])
+  ruleNo      Int
+  text        String
+  criteriaKey String?
+  sortOrder   Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  compliances CsrCompliance[]
+
+  @@map("csr_requirements")
+}
+
+/// Per PPAP (element 17): has this part complied with the requirement?
+/// complied null = not yet assessed. Evidence is a link to another element
+/// of the same PPAP and/or an uploaded file.
+model CsrCompliance {
+  id                String         @id @default(cuid())
+  ppapElementId     String
+  ppapElement       PpapElement    @relation(fields: [ppapElementId], references: [id])
+  requirementId     String
+  requirement       CsrRequirement @relation(fields: [requirementId], references: [id])
+  complied          Boolean?
+  evidenceElementNo Int?
+  evidenceFileUrl   String?
+  evidenceFileName  String?
+  remark            String?
+  updatedAt         DateTime       @updatedAt
+
+  @@unique([ppapElementId, requirementId])
+  @@map("csr_compliances")
+}
+
+/// A printed zone-map page of element 17 (the sheet's pages 2-6), holding
+/// one or more pictures ("views").
+model CsrZoneMapPage {
+  id            String      @id @default(cuid())
+  ppapElementId String
+  ppapElement   PpapElement @relation(fields: [ppapElementId], references: [id])
+  title         String?
+  sortOrder     Int         @default(0)
+  createdAt     DateTime    @default(now())
+
+  views CsrZoneMapView[]
+
+  @@map("csr_zone_map_pages")
+}
+
+/// One picture on a zone-map page. `crop` (fractions 0-1 trimmed from each
+/// edge, {l,t,r,b}) reproduces the reference sheet's picture crops.
+/// `annotations` is the drawn zones over the (cropped) picture, in
+/// fractions of its width/height:
+///   [{ "kind": "rect", "zone": "A", "label": "...", "x":0.1, "y":0.2, "w":0.3, "h":0.1 },
+///    { "kind": "polygon", "zone": "B", "label": "...", "points": [[0.1,0.1],[0.2,0.3],...] }]
+model CsrZoneMapView {
+  id          String         @id @default(cuid())
+  pageId      String
+  page        CsrZoneMapPage @relation(fields: [pageId], references: [id])
+  imageUrl    String
+  imageName   String
+  imageWidth  Int?
+  imageHeight Int?
+  crop        Json?
+  caption     String?
+  annotations Json           @default("[]")
+  sortOrder   Int            @default(0)
+
+  @@map("csr_zone_map_views")
+}
+
+// ---------------------------------------------------------------------------
+// Element 18 — Part Submission Warrant (PSW), sheet "18. PSW" (AIAG layout)
+// ---------------------------------------------------------------------------
+
+enum PpapStatus {
+  OPEN
+  SUBMITTED
+  CLOSED
+}
+
+/// The supplier-entered parts of the PSW. Part info (name, number, ECL,
+/// drawing no., weight), supplier/customer info, requested level, the ECN
+/// log and the submission-results ticks are read live from master data and
+/// other elements (lib/psw.ts), not stored here. The customer's part
+/// disposition is the shared CustomerDisposition (Approved | Rejected |
+/// Other = CONDITIONAL).
+model PswDetail {
+  id            String      @id @default(cuid())
+  ppapElementId String      @unique
+  ppapElement   PpapElement @relation(fields: [ppapElementId], references: [id])
+
+  safetyGovRegulation Boolean?
+  poNumber            String?
+  checkingAidNo       String?
+  checkingAidEcl      String?
+  checkingAidEclDate  DateTime?
+
+  // Customer submittal information (AIAG PSW: Dimensional / Materials-Function / Appearance)
+  submittalDimensional Boolean @default(true)
+  submittalMaterials   Boolean @default(true)
+  submittalAppearance  Boolean @default(true)
+
+  /// Reason codes — see PSW_REASONS in lib/calc/psw.ts (9 boxes as the sheet).
+  reasons         String[]
+  otherReasonText String?
+
+  /// "These results meet all drawing and specification requirements" — No requires an explanation.
+  resultsMeetRequirements Boolean?
+  explanation             String?
+
+  // Declaration: "produced at the production rate of ____ / ____ hours"
+  productionRateQty   String?
+  productionRateHours String?
+
+  printName String?
+  title     String?
+  phone     String?
+
+  /// Supplier authorised e-signature: set only by "Sign PSW" once the
+  /// readiness gate passes; cleared when the customer rejects the PSW.
+  signedById String?
+  signedBy   User?     @relation("PswSignedBy", fields: [signedById], references: [id])
+  signedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("psw_details")
+}
+
+// ---------------------------------------------------------------------------
+// Audit log
+// ---------------------------------------------------------------------------
+
+model AuditLog {
+  id         String      @id @default(cuid())
+  ppapId     String?
+  ppap       Ppap?       @relation(fields: [ppapId], references: [id])
+  userId     String?
+  user       User?       @relation(fields: [userId], references: [id])
+  action     AuditAction
+  entityType String // e.g. "PpapElement", "Ppap"
+  entityId   String
+  before     Json?
+  after      Json?
+  createdAt  DateTime    @default(now())
+
+  @@map("audit_logs")
+}
