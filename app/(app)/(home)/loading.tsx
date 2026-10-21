@@ -1,6 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-/** Shown instantly on navigation while the server renders (Neon round-trips can take a moment). */
+/** Shown while server rendering queries the configured PostgreSQL database. */
 export default function Loading() {
   return (
     <div className="mx-auto max-w-7xl space-y-5 p-6" role="status" aria-label="Loading">

@@ -1,36 +1,32 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PPAP
 
-## Getting Started
+PPAP submission and approval workflow built with Next.js, PostgreSQL, Prisma,
+and AWS S3 file storage.
 
-First, run the development server:
+## Local setup
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+1. Install dependencies with `npm ci`.
+2. Copy `.env.example` to `.env` and set `DATABASE_URL`, `AUTH_SECRET`, and
+   `CRON_SECRET`.
+3. For AWS S3, uncomment the S3 variables in `.env.example`, set the bucket's
+   `S3_REGION`, and use the deployment server's IAM role or its secret store
+   for AWS credentials. Leave them commented for local-disk storage.
+4. Apply the checked-in database migrations with `npx prisma migrate deploy`.
+5. Generate Prisma Client with `npx prisma generate`.
+6. Start the app with `npm run dev` and open <http://localhost:3000>.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+For an empty development database only, `npx prisma db seed` loads demo data
+and login accounts. Do not run the seed command against the production
+database.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Set `DIRECT_URL` only when Prisma migrations need a direct PostgreSQL
+connection and the app uses a pooled `DATABASE_URL`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The S3 identity needs `s3:GetObject` and `s3:PutObject` access to
+`arn:aws:s3:::ppap-ie-prod/ppap_data_prod/*`.
 
-## Learn More
+## Email
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`docker-compose.yml` runs Maildev for local magic-link email. Its inbox UI is
+at <http://localhost:1080>. In production, set `EMAIL_SERVER` and `EMAIL_FROM`
+to the deployment mail service.

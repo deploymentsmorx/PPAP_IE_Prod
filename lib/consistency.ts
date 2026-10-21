@@ -17,7 +17,7 @@ export async function runConsistencyChecks(ppapId: string): Promise<Issue[]> {
 
   const sum = async (...qs: Promise<number>[]) => (await Promise.all(qs)).reduce((a, b) => a + b, 0);
 
-  // Everything below is independent — one parallel batch instead of ~35 sequential Neon round-trips.
+  // Everything below is independent — one parallel batch instead of ~35 sequential database round-trips.
   const [psw, foreignCounts, pageCounts, checklist, pfmeaRows, dimRows] = await Promise.all([
     prisma.pswDetail.findUnique({ where: { ppapElementId: id(18) } }),
 

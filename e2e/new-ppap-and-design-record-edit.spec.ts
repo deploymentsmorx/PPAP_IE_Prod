@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 
 test.afterAll(() => {
   // This test creates a real customer/part/PPAP via the UI; clean it up so
-  // repeated runs don't accumulate junk in the (shared, Neon) dev database.
+  // repeated runs don't accumulate junk in the shared development database.
   // Run as a separate process (not an in-process import) because the
   // generated Prisma client uses import.meta, which Playwright's test
   // runner (CJS-transpiled) can't execute directly. Resolve tsx's CLI
@@ -23,7 +23,7 @@ async function login(page: import("@playwright/test").Page) {
 
 test("creates a new PPAP end-to-end, then edits every part of Design Record", async ({ page }) => {
   // This test performs several round trips (login, create, multiple saves)
-  // against Neon, whose free-tier compute can cold-start on any of them.
+  // against PostgreSQL, whose hosted compute can cold-start on any of them.
   test.setTimeout(90_000);
   await login(page);
 

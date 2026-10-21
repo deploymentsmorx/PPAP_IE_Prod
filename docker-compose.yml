@@ -1,8 +1,6 @@
 services:
-  # Postgres and MinIO are deferred for now — the project is using Neon
-  # (hosted Postgres) for the database, and object storage (MinIO or an
-  # alternative) will be decided when ready to deploy upload features.
-  # See CLAUDE.md for the current status.
+  # PostgreSQL is configured with DATABASE_URL. Uploaded files use S3
+  # configured through S3_BUCKET, S3_PREFIX, and S3_REGION.
 
   maildev:
     image: maildev/maildev:latest

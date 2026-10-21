@@ -1,8 +1,8 @@
 import ExcelJS from "exceljs";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/prisma";
+import { buildStoredFileUrl, getStoredContentType, readStoredFile, saveStoredBuffer } from "@/lib/storage";
 
 /**
  * Shared import logic for element 5 (Process Flow Chart). Used both by
@@ -191,9 +191,6 @@ export async function importPfcWorkbook(workbook: ExcelJS.Workbook, ppapElementI
 
   await wipeExistingChildParts(ppapElementId);
 
-  const sketchDir = path.join(process.cwd(), "storage", "pfc-sketches", ppapElementId);
-  await mkdir(sketchDir, { recursive: true });
-
   // IDs are generated up front (rather than relying on the DB to hand them
   // back) so every row — ChildPart, Route, RouteStep, and the
   // parent/child sub-assembly links — can be built in memory and written
@@ -215,8 +212,9 @@ export async function importPfcWorkbook(workbook: ExcelJS.Workbook, ppapElementI
       let sketchFileName: string | null = null;
       if (item.sketch) {
         sketchFileName = `item-${item.itemNo}.${item.sketch.extension}`;
-        await writeFile(path.join(sketchDir, sketchFileName), item.sketch.buffer);
-        sketchImageUrl = `/api/files/pfc-sketches/${ppapElementId}/${sketchFileName}`;
+        const fileSegments = ["pfc-sketches", ppapElementId, sketchFileName];
+        await saveStoredBuffer(item.sketch.buffer, fileSegments, getStoredContentType(sketchFileName));
+        sketchImageUrl = buildStoredFileUrl(fileSegments);
       }
 
       const parentMatch = item.partNo.match(/^(.+)-(\d+)$/);
@@ -395,10 +393,9 @@ export async function exportPfcWorkbook(ppapElementId: string): Promise<ExcelJS.
 async function readSketchBuffer(url: string): Promise<Buffer | null> {
   const prefix = "/api/files/";
   if (!url.startsWith(prefix)) return null;
-  const segments = url.slice(prefix.length).split("/");
-  const filePath = path.join(process.cwd(), "storage", ...segments);
   try {
-    return await readFile(filePath);
+    const segments = url.slice(prefix.length).split("/").map(decodeURIComponent);
+    return (await readStoredFile(segments))?.buffer ?? null;
   } catch {
     return null;
   }

@@ -71,7 +71,7 @@ async function completeAndSign(page: Page, ppapId: string) {
   if (!(await initial.isChecked())) await initial.check();
   await page.locator('input[name="resultsMeetRequirements"][value="Y"]').check();
   await page.getByRole("button", { name: "Sign PSW" }).click();
-  // The post-sign refresh re-runs the consistency checks (many Neon round-trips) — allow for a slow wake.
+  // The post-sign refresh re-runs the consistency checks (many database round-trips) — allow for a slow response.
   await expect(page.getByTestId("psw-signed")).toContainText("E-signed by Santhosh BG", { timeout: 90_000 });
   await expect(page.getByTestId("ppap-status")).toHaveText("Submitted");
 }

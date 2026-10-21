@@ -9,11 +9,9 @@ export default defineConfig({
     path: "prisma/migrations",
     seed: "npx tsx prisma/seed.ts",
   },
-  // The CLI (migrate/db push/studio) uses the direct (non-pooled) Neon
-  // connection — migrations use session features (advisory locks) that
-  // don't work reliably through PgBouncer's transaction-mode pooler.
-  // The app's runtime PrismaClient (lib/prisma.ts) uses the pooled
-  // DATABASE_URL via @prisma/adapter-pg instead.
+  // Use DIRECT_URL for migrations when DATABASE_URL points to a pooler.
+  // A standard PostgreSQL server can use DATABASE_URL for both the CLI
+  // and runtime connection.
   datasource: {
     url: process.env["DIRECT_URL"] ?? process.env["DATABASE_URL"],
   },

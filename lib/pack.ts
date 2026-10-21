@@ -1,9 +1,8 @@
-import { readFile } from "node:fs/promises";
 import path from "node:path";
 import JSZip from "jszip";
 import { PDFDocument, PageSizes } from "pdf-lib";
 import { prisma } from "@/lib/prisma";
-import { resolveStoredFilePath } from "@/lib/storage";
+import { readStoredFile } from "@/lib/storage";
 import { renderPrintRoutesToPdfs } from "@/lib/pdf";
 import { addOutline, type OutlineItem } from "@/lib/pdf-outline";
 import { getCheckingAidsForPpap } from "@/lib/instruments";
@@ -77,7 +76,8 @@ export async function getPackManifest(ppapId: string): Promise<{ included: PackE
 async function readStored(url: string): Promise<Buffer | null> {
   if (!url.startsWith("/api/files/")) return null;
   try {
-    return await readFile(resolveStoredFilePath(url.slice("/api/files/".length).split("/").map(decodeURIComponent)));
+    const segments = url.slice("/api/files/".length).split("/").map(decodeURIComponent);
+    return (await readStoredFile(segments))?.buffer ?? null;
   } catch {
     return null;
   }

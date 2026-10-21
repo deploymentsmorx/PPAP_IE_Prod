@@ -11,18 +11,15 @@ print layouts; don't rely on paraphrase.
 Next.js 15 (App Router) + TypeScript, PostgreSQL + Prisma, Tailwind +
 shadcn/ui, NextAuth v5 (credentials + email magic link), Zod, TanStack Table,
 Recharts, ExcelJS (Excel import/export), Playwright (headless Chromium) for
-PDF rendering and e2e, S3-compatible storage. Vitest for unit tests.
+PDF rendering and e2e, AWS S3 file storage. Vitest for unit tests.
 
-**Current infra status (2026-10-07):** using Neon (hosted Postgres) for
-`DATABASE_URL` rather than a local Docker Postgres — MinIO's community
-Docker images were pulled from Docker Hub and gated on Quay in 2026, and
-their AIStor successor requires online license activation even for local
-use, so object storage setup is deferred until closer to deploying the
-upload/attachment features (F3). `docker-compose.yml` currently only runs
-Maildev (local SMTP catcher for magic-link email in dev, at
-http://localhost:1080). Revisit the storage choice (MinIO AIStor with a
-license, `bitnamilegacy/minio`, Garage, or a managed S3-compatible service)
-before building attachment upload.
+**Current infra status:** the app uses a standard PostgreSQL connection from
+`DATABASE_URL`, with optional `DIRECT_URL` for Prisma migrations when the
+runtime URL is pooled. Deployment PostgreSQL is supplied by the PPAP server.
+Uploaded files use AWS S3 bucket `ppap-ie-prod` under prefix
+`ppap_data_prod/`; configure `S3_REGION` and deployment credentials through
+the server environment (prefer its IAM role). `docker-compose.yml` only runs
+Maildev for local magic-link email at http://localhost:1080.
 
 ## Domain model
 

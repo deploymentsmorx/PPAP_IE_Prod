@@ -1,20 +1,6 @@
-import { readFile, stat } from "node:fs/promises";
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { resolveStoredFilePath } from "@/lib/storage";
-
-const MIME_BY_EXT: Record<string, string> = {
-  ".pdf": "application/pdf",
-  ".png": "image/png",
-  ".jpg": "image/jpeg",
-  ".jpeg": "image/jpeg",
-  ".webp": "image/webp",
-  ".gif": "image/gif",
-  ".dwg": "application/acad",
-  ".dxf": "application/dxf",
-  ".step": "application/step",
-  ".stp": "application/step",
-};
+import { getStoredContentType, readStoredFile } from "@/lib/storage";
 
 export async function GET(
   _req: Request,
@@ -27,26 +13,27 @@ export async function GET(
 
   const { path: segments } = await params;
 
-  let filePath: string;
+  let storedFile: Awaited<ReturnType<typeof readStoredFile>>;
   try {
-    filePath = resolveStoredFilePath(segments);
-  } catch {
-    return new NextResponse("Invalid path", { status: 400 });
+    storedFile = await readStoredFile(segments);
+  } catch (error) {
+    if (error instanceof Error && error.message === "Invalid file path") {
+      return new NextResponse("Invalid path", { status: 400 });
+    }
+    return new NextResponse("File storage unavailable", { status: 502 });
   }
 
-  try {
-    await stat(filePath);
-  } catch {
+  if (!storedFile) {
     return new NextResponse("Not found", { status: 404 });
   }
 
-  const buffer = await readFile(filePath);
-  const ext = filePath.slice(filePath.lastIndexOf(".")).toLowerCase();
-  const contentType = MIME_BY_EXT[ext] ?? "application/octet-stream";
+  const fileName = segments.at(-1) ?? "";
+  const contentType = getStoredContentType(fileName);
 
-  return new NextResponse(new Uint8Array(buffer), {
+  return new NextResponse(new Uint8Array(storedFile.buffer), {
     headers: {
       "Content-Type": contentType,
+      "X-Content-Type-Options": "nosniff",
       "Cache-Control": "private, max-age=0, must-revalidate",
     },
   });
