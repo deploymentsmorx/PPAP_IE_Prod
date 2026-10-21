@@ -45,7 +45,7 @@ const TONE = {
 function Kpi({ label, value, icon: Icon, tone, alert, testId }: { label: string; value: number; icon: LucideIcon; tone: keyof typeof TONE; alert?: "warn" | "bad"; testId: string }) {
   const valueClass = alert === "bad" && value > 0 ? "text-red-600 dark:text-red-400" : alert === "warn" && value > 0 ? "text-amber-600 dark:text-amber-400" : "";
   return (
-    <div className="flex items-start justify-between gap-2 rounded-xl border bg-card p-4 shadow-[0_1px_2px_0_rgb(15_23_42/0.05)]" data-testid={testId}>
+    <div className="flex items-start justify-between gap-2 rounded-xl border border-border/80 bg-card p-4 shadow-[0_1px_2px_0_rgb(15_23_42/0.04)]" data-testid={testId}>
       <div className="min-w-0">
         <div className="text-xs leading-snug font-medium text-muted-foreground">{label}</div>
         <div className={cn("mt-1 text-2xl font-semibold tracking-tight tabular-nums", valueClass)}>{value}</div>
@@ -62,7 +62,9 @@ function Section({ title, icon: Icon, count, action, children, className, testId
     <Card className={className} data-testid={testId}>
       <CardHeader className="flex flex-row items-center justify-between gap-2 border-b pb-3">
         <CardTitle className="flex items-center gap-2 text-sm">
-          <Icon className="size-4 text-muted-foreground" aria-hidden />
+          <span className="grid size-7 place-items-center rounded-md bg-accent text-primary">
+            <Icon className="size-3.5" aria-hidden />
+          </span>
           {title}
           {count !== undefined && count > 0 ? <span className="rounded-full bg-muted px-1.5 text-xs font-medium text-muted-foreground tabular-nums">{count}</span> : null}
         </CardTitle>
@@ -91,10 +93,11 @@ export default async function DashboardPage() {
   const firstName = (user.name ?? user.email).split(/[\s@]/)[0];
 
   return (
-    <main className="mx-auto max-w-7xl space-y-5 p-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight">Dashboard</h1>
+    <main className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="space-y-1">
+          <p className="text-[0.68rem] font-semibold tracking-[0.14em] text-primary/80 uppercase">Workspace overview</p>
+          <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
           <p className="text-sm text-muted-foreground">
             Welcome back, {firstName}. {user.can.editSupplierData ? "Here's where every PPAP stands today." : "PPAPs submitted to you for approval."}
           </p>

@@ -25,8 +25,8 @@ export function AppNav({ items }: { items: AppNavItem[] }) {
             href={item.href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground",
-              active && "bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground",
+              "relative inline-flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+              active && "bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground after:absolute after:inset-x-2 after:-bottom-[0.9rem] after:h-0.5 after:rounded-full after:bg-primary",
             )}
           >
             <Icon className="size-4" aria-hidden />

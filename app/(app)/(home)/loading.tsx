@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 /** Shown while server rendering queries the configured PostgreSQL database. */
 export default function Loading() {
   return (
-    <div className="mx-auto max-w-7xl space-y-5 p-6" role="status" aria-label="Loading">
+    <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8" role="status" aria-label="Loading">
       <div className="space-y-2">
         <Skeleton className="h-7 w-48" />
         <Skeleton className="h-4 w-72" />

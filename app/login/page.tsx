@@ -30,7 +30,7 @@ export default async function LoginPage() {
             backgroundSize: "32px 32px",
           }}
         />
-        <div aria-hidden className="absolute -top-40 -right-40 size-[28rem] rounded-full bg-[radial-gradient(circle,oklch(0.55_0.15_262/0.45),transparent_70%)]" />
+        <div aria-hidden className="absolute -top-40 -right-40 size-[28rem] rounded-full bg-[radial-gradient(circle,oklch(0.55_0.12_245/0.42),transparent_70%)]" />
         <div className="relative flex items-center gap-3">
           <span className="grid size-10 place-items-center rounded-xl bg-white/10 text-sm font-bold ring-1 ring-white/20">IE</span>
           <span className="text-sm font-medium opacity-90">Ingenious Engineering Pvt Ltd</span>

@@ -21,7 +21,7 @@ export function LoginForm() {
   );
 
   return (
-    <Card className="w-full max-w-sm shadow-lg shadow-slate-900/5">
+    <Card className="w-full max-w-sm ring-1 ring-slate-900/[0.04] shadow-xl shadow-slate-900/5">
       <CardHeader>
         <CardTitle className="text-xl">Sign in</CardTitle>
         <CardDescription>PPAP Management — Ingenious Engineering Pvt Ltd</CardDescription>
