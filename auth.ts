@@ -7,6 +7,9 @@ import { prisma } from "@/lib/prisma";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
+  // Behind Render's proxy the request host isn't AUTH_URL's; trust the
+  // forwarded host instead of relying on AUTH_TRUST_HOST being set.
+  trustHost: true,
   session: { strategy: "jwt" },
   pages: { signIn: "/login" },
   providers: [
