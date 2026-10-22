@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { updatePersonRolesAndCustomer } from "@/lib/actions/users";
 import { Button } from "@/components/ui/button";
 
-const USER_ROLES = ["ADMIN", "QA_ENGINEER", "QA_MANAGER", "ENGINEERING", "PRODUCTION", "CUSTOMER_APPROVER"] as const;
+const USER_ROLES = ["ADMIN", "QA_ENGINEER", "QA_MANAGER", "ENGINEERING", "LEAD", "PRODUCTION", "CUSTOMER_APPROVER"] as const;
 
 export function EditPersonRoles({
   userId,

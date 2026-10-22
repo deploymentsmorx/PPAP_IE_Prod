@@ -14,12 +14,18 @@ const initials = (name: string) =>
     .map((p) => p[0]!.toUpperCase())
     .join("");
 
-// QA_MANAGER → "QA Manager", ADMIN → "Admin".
-const roleLabel = (role: string) =>
-  role
-    .split("_")
-    .map((w) => (w.length <= 2 ? w : w[0] + w.slice(1).toLowerCase()))
-    .join(" ");
+const ROLE_LABELS: Record<string, string> = {
+  SUPER_ADMIN: "Super Admin",
+  ADMIN: "Admin",
+  QA_MANAGER: "Manager",
+  QA_ENGINEER: "Engineer",
+  ENGINEERING: "Engineer",
+  LEAD: "Lead",
+  PRODUCTION: "Production",
+  CUSTOMER_APPROVER: "Customer Approver",
+};
+
+const roleLabel = (role: string) => ROLE_LABELS[role] ?? role;
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -36,6 +42,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   }
   if (can?.manageUsers) items.push({ href: "/users", label: "Users", icon: "users" });
   if (can?.viewAuditLog) items.push({ href: "/audit", label: "Audit log", icon: "audit" });
+  if (can?.manageLicenses) items.push({ href: "/super-admin", label: "Super Admin", icon: "superadmin" });
 
   return (
     <div className="flex min-h-svh flex-col">

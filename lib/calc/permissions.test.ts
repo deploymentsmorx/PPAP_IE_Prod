@@ -3,7 +3,11 @@ import { permissionsFor, isCustomerOnly } from "./permissions";
 
 describe("permissionsFor", () => {
   it("lets an admin do everything", () => {
-    expect(permissionsFor(["ADMIN"])).toEqual({ editSupplierData: true, approvePages: true, signPsw: true, viewAuditLog: true, manageUsers: true, ownCustomerOnly: false });
+    expect(permissionsFor(["ADMIN"])).toEqual({ editSupplierData: true, approvePages: true, signPsw: true, viewAuditLog: true, manageUsers: true, manageLicenses: false, ownCustomerOnly: false });
+  });
+
+  it("lets a super admin manage licenses", () => {
+    expect(permissionsFor(["SUPER_ADMIN"])).toMatchObject({ manageUsers: true, manageLicenses: true, ownCustomerOnly: false });
   });
 
   it("lets a QA manager approve and sign, but not manage users", () => {
@@ -17,7 +21,7 @@ describe("permissionsFor", () => {
   });
 
   it("confines a customer approver to its own customer, read-only", () => {
-    expect(permissionsFor(["CUSTOMER_APPROVER"])).toEqual({ editSupplierData: false, approvePages: false, signPsw: false, viewAuditLog: false, manageUsers: false, ownCustomerOnly: true });
+    expect(permissionsFor(["CUSTOMER_APPROVER"])).toEqual({ editSupplierData: false, approvePages: false, signPsw: false, viewAuditLog: false, manageUsers: false, manageLicenses: false, ownCustomerOnly: true });
   });
 
   it("treats a customer approver who also has a supplier role as a supplier user", () => {

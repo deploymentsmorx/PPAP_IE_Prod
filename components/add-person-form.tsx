@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-const USER_ROLES = ["ADMIN", "QA_ENGINEER", "QA_MANAGER", "ENGINEERING", "PRODUCTION", "CUSTOMER_APPROVER"] as const;
+const USER_ROLES = ["ADMIN", "QA_ENGINEER", "QA_MANAGER", "ENGINEERING", "LEAD", "PRODUCTION", "CUSTOMER_APPROVER"] as const;
 
 export function AddPersonForm({
   onCreated,

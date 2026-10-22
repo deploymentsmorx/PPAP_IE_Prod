@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ClipboardList, FlaskConical, Gauge, History, LayoutDashboard, Users } from "lucide-react";
+import { ClipboardList, FlaskConical, Gauge, History, LayoutDashboard, ShieldCheck, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type AppNavItem = { href: string; label: string; icon: "dashboard" | "users" | "labs" | "instruments" | "csr" | "audit" };
+export type AppNavItem = { href: string; label: string; icon: "dashboard" | "users" | "labs" | "instruments" | "csr" | "audit" | "superadmin" };
 
-const ICONS = { dashboard: LayoutDashboard, users: Users, labs: FlaskConical, instruments: Gauge, csr: ClipboardList, audit: History };
+const ICONS = { dashboard: LayoutDashboard, users: Users, labs: FlaskConical, instruments: Gauge, csr: ClipboardList, audit: History, superadmin: ShieldCheck };
 
 /** Top-bar links; the active section is highlighted (PPAP pages count as the dashboard). */
 export function AppNav({ items }: { items: AppNavItem[] }) {

@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { assertSupplierUser, assertCan } from "@/lib/permissions";
 import { Prisma, UserRole } from "@/app/generated/prisma/client";
 
-const USER_ROLES = Object.values(UserRole) as UserRole[];
+const USER_ROLES: UserRole[] = [UserRole.ADMIN, UserRole.QA_ENGINEER, UserRole.QA_MANAGER, UserRole.ENGINEERING, UserRole.LEAD, UserRole.PRODUCTION, UserRole.CUSTOMER_APPROVER];
 
 const createPersonSchema = z.object({
   name: z.string().min(1),

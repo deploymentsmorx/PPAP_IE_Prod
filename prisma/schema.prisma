@@ -17,7 +17,9 @@ datasource db {
 // ---------------------------------------------------------------------------
 
 enum UserRole {
+  SUPER_ADMIN
   ADMIN
+  LEAD
   QA_ENGINEER
   QA_MANAGER
   ENGINEERING
@@ -28,6 +30,12 @@ enum UserRole {
 enum ApprovalMode {
   CUSTOMER_PORTAL
   SUPPLIER_UPLOAD
+}
+
+enum LicenseStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
 }
 
 enum PartRevisionStatus {
@@ -156,6 +164,31 @@ model Supplier {
   updatedAt    DateTime @updatedAt
 
   @@map("suppliers")
+}
+
+model CustomerLicense {
+  id                  String        @id @default(cuid())
+  companyName         String
+  licenseKey          String        @unique
+  installPasswordHash String
+  requireDevice       Boolean       @default(true)
+  grantFullAccess     Boolean       @default(false)
+  deviceId            String?
+  hostName            String?
+  engineerName        String
+  engineerEmail       String
+  engineerRole        UserRole
+  status              LicenseStatus @default(PENDING)
+  activatedAt         DateTime?
+  engineerUserId      String?       @unique
+  engineer            User?         @relation("LicenseEngineer", fields: [engineerUserId], references: [id], onDelete: SetNull)
+  createdById         String
+  createdBy           User          @relation("LicenseCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  @@index([status, createdAt])
+  @@map("customer_licenses")
 }
 
 model Part {
@@ -288,6 +321,8 @@ model User {
   customerDispositionsRecorded CustomerDisposition[] @relation("CustomerDispositionRecordedBy")
   dfmeaRowsResponsible DfmeaRow[] @relation("DfmeaRowResponsible")
   pfmeaRowsResponsible PfmeaRow[] @relation("PfmeaRowResponsible")
+  createdCustomerLicenses CustomerLicense[] @relation("LicenseCreatedBy")
+  engineerLicense CustomerLicense? @relation("LicenseEngineer")
 
   @@map("users")
 }
